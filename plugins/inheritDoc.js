@@ -1,3 +1,4 @@
+/*jshint latedef: false */
 // This plugin:
 //
 // 1.
@@ -66,15 +67,14 @@
 // (This might conflict with Closure Compiler's @inheritDoc command - should I
 // rename mine to avoid confusion?)
 
-var allDoclets = {};
-// parent --> [inheritors]
-var lookingForParent = {};
+var completedDoclets = {};
+var waitingFor = {};
 
-var lookingForSuperclass = {};
+//var lookingForSuperclass = {};
+//var scopeToPunc = { 'static': '.', 'inner': '~', 'instance': '#' };
 
 var deferred = [];
 
-var scopeToPunc = { 'static': '.', 'inner': '~', 'instance': '#' };
 function firstWordOf(string) {
     var m = /^(\S+)/.exec(string);
     if (m) { return m[1]; }
@@ -84,7 +84,7 @@ function firstWordOf(string) {
 var scalars_to_inherit = ['description', 'summary', 'classdesc'];
 
 function inherit(from, to) {
-    //console.log('making ' + to.name + ' inherit from ' + from.name);
+    console.log('making ' + to.name + ' inherit from ' + from.name);
     if (to.returns === undefined || !to.returns.length) {
         to.returns = from.returns;
     }
@@ -146,11 +146,98 @@ function inherit(from, to) {
     }
 }
 
+
+// TEST: markComplete's down the bottom and the inheriting is all out
+// of order.
+// TODO: we don't get into an infinite loop! (test)
+
+/** Marks `doclet` as requiring documentation from `ancestor`.
+ * @param {string} ancestor - longname of class to inherit documentation from.
+ * @inheritparams processInherits */
 function addInherit(doclet, ancestor) {
     if (!doclet.inheritdocs) {
         doclet.inheritdocs = [];
     }
     doclet.inheritdocs.push(ancestor);
+    console.log('addInherit: ' + (doclet.meta.code ? doclet.meta.code.name : 'UNDEFINED') + "'s inheritdocs: " + doclet.inheritdocs);
+}
+
+/** Determines whether this doclet is waiting for documentation from any
+ * other classes or whether it's complete.
+ * @inheritparams addInherit
+ * @returns {boolean} whether the doclet has any remaining unresolved
+ * dependencies.
+ */
+function isComplete(doclet) {
+    return !(doclet.inheritdocs && doclet.inheritdocs.length);
+}
+
+// TODO: multiple inheritparams?
+// TODO: the '__generated' counting towards complete (remove this 'feature'?)
+// (add another plugin 'undocumentedParameters').
+/** Called whenever a doclet is completed (from {@link markComplete}).
+ * `doclet` is the completed doclet.
+ *
+ * This sees if any other doclets are waiting for documentation from `doclet`
+ * and processes them.
+ * @see markComplete
+ * @see processInherits
+ * @inheritparams addInherit */
+function onCompleteDoclet(doclet) {
+    //console.log('processin doclets waiting on ' + doclet.longname);
+    // `doclet` has just been added to completedDoclets.
+    var waiting = waitingFor[doclet.longname];
+    if (!waiting) {
+        return;
+    }
+
+    for (var i = 0; i < waiting.length; ++i) {
+        console.log('doclet ' + waiting[i].longname + ' was waiting on ' + doclet.longname);
+        processInherits(waiting[i]);
+    }
+    delete waitingFor[doclet.longname];
+}
+
+/** Marks a doclet as being complete.
+ *
+ * Behind the scenes this stores the doclet in completedDoclets and then
+ * calls onCompleteDoclet on it to process any doclets waiting for this one.
+ * @see isComplete
+ * @param {Doclet} doclet - a doclet.
+ */
+function markComplete(doclet) {
+    console.log('markComplete: ' + doclet.longname);
+    completedDoclets[doclet.longname] = doclet;
+    onCompleteDoclet(doclet);
+}
+
+/** Processes all outstanding inherits for `doclet`, resolving as many
+ * as possible.
+ *
+ * If `doclet` requires documentation from a symbol that has not yet been
+ * found, we store it in {@link waitingFor}.
+ *
+ * @inheritparams markComplete */
+function processInherits(doclet) {
+    var i = doclet.inheritdocs.length;
+    console.log('processInherits for ' + doclet.longname + ': ' + doclet.inheritdocs);
+    // note: later declarations will override earlier ones.
+    while (i--) {
+        var inheritFrom = doclet.inheritdocs[i];
+        if (completedDoclets[inheritFrom]) {
+            inherit(completedDoclets[inheritFrom], doclet);
+            doclet.inheritdocs.splice(i, 1); // since we're going backwards this is ok
+        } else {
+            if (!waitingFor[inheritFrom]) {
+                waitingFor[inheritFrom] = [];
+            }
+            waitingFor[inheritFrom].push(doclet);
+        }
+    }
+    if (!doclet.inheritdocs.length) {
+        delete doclet.inheritdocs;
+        markComplete(doclet);
+    }
 }
 
 exports.defineTags = function (dictionary) {
@@ -177,6 +264,16 @@ exports.defineTags = function (dictionary) {
         mustNotHaveValue: true,
         onTagged: function (doclet, tag) {
             console.log('@override found'); // doclet.meta.lineno
+            //console.log(doclet);
+            //app.jsdoc.parser
+//            if (doclet.meta.code) {
+//                console.log(app.jsdoc.parser.resolvePropertyParent(doclet.meta.code));
+//                try {
+//                console.log(app.jsdoc.parser.astnodeToMemberof(doclet.meta.code));
+//                } catch (e) {
+//                }
+//                console.log(app.jsdoc.parser.resolveThis(doclet.meta.code));
+//            }
             // we have to look up doclet's class's .augments tag but they
             // are not made at this point, so we'll do it later.
             deferred.push(doclet);
@@ -188,103 +285,20 @@ exports.defineTags = function (dictionary) {
 // also, don't use this anywhere other than a method ?
 // what about things like @see ... do they inherit?
 exports.handlers = {
-    fileComplete: function 
     newDoclet: function (e) {
         if (e.doclet.undocumented) {
             return;
         }
-        var d = e.doclet;
-        var i = deferred.indexOf(d);
-        if (i > -1) {
-            var parentD = allDoclets[d.memberof];
-            deferred.splice(i, 1);
-            // Look up the parent doclet and grab its augments??
-            if (parentD) {
-                if (!d.see) {
-                    d.see = [];
-                }
 
-                for (i = 0; i < parentD.augments.length; ++i) {
-                    var inheritMember = parentD.augments[i] +
-                        (scopeToPunc[d.scope] || '#') +
-                        d.name;
+        var doclet = e.doclet;
+        //console.log(doclet);
 
-                    d.see.push(inheritMember);
-                    addInherit(d, inheritMember);
-                }
-                d.inheritParamsOnly = false;
-            } else {
-                // TODO
-                if (!lookingForSuperclass[d.memberof]) {
-                    lookingForSuperclass[d.memberof] = [];
-                }
-                lookingForSuperclass[d.memberof].push(d.longname);
-            }
+        if (isComplete(doclet)) {
+            console.log('doclet: ' + doclet.longname + ' completed');
+            markComplete(doclet);
+        } else {
+            console.log('doclet: ' + doclet.longname + ' processing');
+            processInherits(doclet);
         }
-
-        if (lookingForSuperclass[d.longname]) {
-            var children = lookingForSuperclass[d.longname];
-            for (i = 0; i < children.length; ++i) {
-                var inheritMember = parentD.augments[j] +
-                    (scopeToPunc[children[i].scope] || '#') +
-                    children[i].name;
-                children[i].see.push(inheritMember);
-                // TODO: attempt to inherit.
-                // 1. if inheritMember hasn't come out yet we'll add to a waiting list.
-                // 2. if it has, do the inherit.
-                addInherit(children[i], inheritMember);
-                processInherits(children[i]);
-                // TODO: what if things are waiting on US!
-            }
-            delete lookingForSuperclass[d.longname];
-        }
-        //console.log('new doclet: ' + d.longname);
-        allDoclets[d.longname] = d;
-
-        processInherits(d);
-
-        // see if anyone is waiting for you.
-        var inheritors = lookingForParent[d.longname];
-        if (inheritors) {
-            for (i = 0; i < inheritors.length; ++i) {
-                inherit(d, allDoclets[inheritors[i]]);
-            }
-            delete lookingForParent[d.longname];
-        }
-
     }
 };
-
-/** Makes d inherit from all the things in its list where the symbols
- * are known already; otherwise, we add to the waiting list lookingForParent
- * until the parent symbol becomes known.
- *
- * BAH: what if foo inherits bar which inherits baz.
- *
- * we find bar first --> waits on baz.
- * we find foo --> inherits from bar but that's EMPTY?!
- *
- * then we find baz --> this resolves bar.
- *
- * But foo is left dangling.
- */
-function processInherits(d) {
-    if (d.inheritdocs) {
-        for (var i = 0; i < d.inheritdocs.length; ++i) {
-            var inheritFrom = d.inheritdocs[i];
-            if (allDoclets[inheritFrom]) {
-                inherit(allDoclets[inheritFrom], d);
-            } else {
-                if (!lookingForParent[inheritFrom]) {
-                    lookingForParent[inheritFrom] = [];
-                }
-                lookingForParent[inheritFrom].push(d.longname);
-            }
-        }
-    }
-}
-
-/** Sees if any other doclets are waiting on this one's definition and resolves them.
- */
-function resolveDependencies(d) {
-}

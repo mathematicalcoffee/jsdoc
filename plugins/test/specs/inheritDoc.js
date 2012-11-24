@@ -26,13 +26,13 @@ describe("inheritDoc plugin", function() {
         return null;
     }
 
-    it("@inheritparams adds an inheritdocs array to the doclet", function () {
-        expect(typeof myFunction3.inheritdocs).toEqual('object');
-    });
+//    it("@inheritparams adds an inheritdocs array to the doclet", function () {
+//        expect(typeof myFunction3.inheritdocs).toEqual('object');
+//    });
 
-    it("@inheritparams adds the name of the inherited function in its inheritdocs array", function () {
-        expect(myFunction3.inheritdocs[0]).toEqual('myFunction');
-    });
+//    it("@inheritparams adds the name of the inherited function in its inheritdocs array", function () {
+//        expect(myFunction3.inheritdocs[0]).toEqual('myFunction');
+//    });
 
     it("@inheritparams: inheritor's number of arguments should be right", function () {
         // myFunction3 should have 4 parameters.
@@ -68,13 +68,13 @@ describe("inheritDoc plugin", function() {
         expect(a.description).toEqual('undocumented');
     });
 
-    it("@inheritdoc creates a inheritdocs property to the doclet", function () {
-        expect(typeof myFunction2.inheritdocs).toEqual('object');
-    });
-
-    it("@inheritdocs adds the name of the inherited function in its inheritdocs array", function () {
-        expect(myFunction2.inheritdocs[0]).toEqual('myFunction3');
-    });
+//    it("@inheritdoc creates a inheritdocs property to the doclet", function () {
+//        expect(typeof myFunction2.inheritdocs).toEqual('object');
+//    });
+//
+//    it("@inheritdocs adds the name of the inherited function in its inheritdocs array", function () {
+//        expect(myFunction2.inheritdocs[0]).toEqual('myFunction3');
+//    });
 
     it("@inheritdoc: inherit parameters/returns as @inheritparams", function () {
         // myFunction2 @inheritdoc's myFunction3 - returns is overridden, but
@@ -132,18 +132,18 @@ describe("inheritDoc plugin", function() {
     });
 
     // OVERRIDE
-    it("@override: guesses the correct symbol to inherit from", function () {
+    xit("@override: guesses the correct symbol to inherit from", function () {
         // MySubclass.doStuff @override from MyClass.doStuff
         expect(typeof doStuffSubclass.inheritdocs).toEqual('object');
         expect(doStuffSubclass.inheritdocs[0]).toEqual('MyClass#doStuff');
     });
 
-    it("@override: adds link to overridden function in @see", function () {
+    xit("@override: adds link to overridden function in @see", function () {
         expect(typeof doStuffSubclass.see).toEqual('object');
         expect(doStuffSubclass.see.indexOf('MyClass#doStuff')).not.toEqual(-1);
     });
 
-    it("@override: inherits description/params/returns with possible overrides", function () {
+    xit("@override: inherits description/params/returns with possible overrides", function () {
         // # params
         expect(doStuffSubclass.params.length).toEqual(2);
         var foo = getParamByName(doStuffSubclass, 'foo'),
@@ -163,7 +163,7 @@ describe("inheritDoc plugin", function() {
         expect(doStuffSubclass.returns[0].description).toEqual('another explanation');
     });
 
-    it("@override: overriding a function only documented in a grandparent class works", function () {
+    xit("@override: overriding a function only documented in a grandparent class works", function () {
         // MySubclass2#doStuff extends MyClass2#doStuff extends MySubclass#doStuff 
 
         // foo argument
@@ -180,7 +180,7 @@ describe("inheritDoc plugin", function() {
         expect(doStuffSubclass2.description).toEqual(doStuffSubclass.description);
     });
 
-    it("@override: if the @override declaration occurs before the parent function definition it still works", function () {
+    xit("@override: if the @override declaration occurs before the parent function definition it still works", function () {
 
     });
 });
