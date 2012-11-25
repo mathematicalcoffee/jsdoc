@@ -69,11 +69,11 @@
 
 var completedDoclets = {};
 var waitingFor = {};
-
+var waitingForParent = [];
+var waitingForName = {};
+var scopeToPunc = { 'static': '.', 'inner': '~', 'instance': '#' };
 //var lookingForSuperclass = {};
-//var scopeToPunc = { 'static': '.', 'inner': '~', 'instance': '#' };
-
-var deferred = [];
+//var deferred = [];
 
 function firstWordOf(string) {
     var m = /^(\S+)/.exec(string);
@@ -263,23 +263,64 @@ exports.defineTags = function (dictionary) {
     dictionary.defineTag('override', {
         mustNotHaveValue: true,
         onTagged: function (doclet, tag) {
-            console.log('@override found'); // doclet.meta.lineno
-            //console.log(doclet);
-            //app.jsdoc.parser
-//            if (doclet.meta.code) {
-//                console.log(app.jsdoc.parser.resolvePropertyParent(doclet.meta.code));
-//                try {
-//                console.log(app.jsdoc.parser.astnodeToMemberof(doclet.meta.code));
-//                } catch (e) {
-//                }
-//                console.log(app.jsdoc.parser.resolveThis(doclet.meta.code));
-//            }
-            // we have to look up doclet's class's .augments tag but they
-            // are not made at this point, so we'll do it later.
-            deferred.push(doclet);
+            var id = doclet.meta.code.id;
+            if (!id) {
+                return;
+            }
+            console.log('@override found: ' + doclet.meta.code.name + ' (' + id + ')'); // doclet.meta.lineno
+            doclet.inheritParamsOnly = false;
+            if (!doclet.see) {
+                doclet.see = [];
+            }
+            var node = doclet.meta.code.node;
+            // must now look up the doclet for MyClass
+            if (node) { // todo - astnodeToMemberof has MyClass~
+                // TODO: app is not defined (jshint)
+                var parentClass = app.jsdoc.parser.resolveThis(node);
+                // TODO: what if multiple @extends?
+                console.log('   ' + parentClass); // BAH ANONYMOUS
+                // todo: longname or name?
+                // astnodeToMemberof is MyClass2~ - use that?
+                // parent node must exist already if we're up to the function
+                // (TODO: define MyClass.foo = {} and *then* MyClass?).
+                var parentD = app.jsdoc.parser.results().filter(function (d) {
+                    return (d.longname || d.name) === parentClass;
+                })[0];
+                //console.log('   parentD: ' + parentD);
+                if (parentD) {
+                    // BIG TODO: doclet.name doesn't yet exist.
+                    //console.log(parentD);
+                    // addInheritsForSubclass(doclet, parentD);
+                    // TODO: .push?
+                    waitingForName[id] = parentD;
+                }
+            } else {
+                console.log("ERROR: could not find parent class for function " +
+                        doclet.name);
+            }
         }
     });
 };
+
+// TODO: grandparants. A < B < C, C.foo exists, B.foo doesn't (we use C.foo),
+// will A.foo's @override work as B.foo is not explicit?
+/** Looks up the superclass(es) of `doclet` and adds the parent functions
+ * @inheritparams processInherits
+ * @param {Doclet} classDoclet - the doclet for `doclet`'s class
+ * (for example if `doclet` is Class#method, `classDoclet` is for `Class`).
+ */
+function addInheritsForSubclass(doclet, classDoclet) {
+    if (classDoclet.augments) {
+        console.log('addInheritsForSubclass: ' + doclet.name + ' from ' + classDoclet.augments);
+        for (var i = 0; i < classDoclet.augments.length; ++i) {
+            var parentFunction = classDoclet.augments[i] +
+                                 (scopeToPunc[doclet.scope] || '#') +
+                                 doclet.name;
+            addInherit(doclet, parentFunction);
+            doclet.see.push(parentFunction);
+        }
+    }
+}
 
 // need to add to postProcess really...
 // also, don't use this anywhere other than a method ?
@@ -292,12 +333,20 @@ exports.handlers = {
 
         var doclet = e.doclet;
         //console.log(doclet);
+        //TODO: switch longnames to ids
+        var id = doclet.meta.code.id;
+        console.log('new doclet: ' + id);
+        if (waitingForName[id]) {
+            console.log("   FOUND");
+            addInheritsForSubclass(doclet, waitingForName[id]);
+            delete waitingForName[id];
+        }
 
         if (isComplete(doclet)) {
-            console.log('doclet: ' + doclet.longname + ' completed');
+            console.log('   doclet: ' + doclet.longname + ' completed');
             markComplete(doclet);
         } else {
-            console.log('doclet: ' + doclet.longname + ' processing');
+            console.log('   processing doclet: ' + doclet.longname);
             processInherits(doclet);
         }
     }

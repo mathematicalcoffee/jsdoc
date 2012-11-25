@@ -114,7 +114,7 @@ describe("inheritDoc plugin", function() {
         expect(a).toEqual(null);
     });
 
-    xit("Multiple @inherits - previous ones override later ones", function () {
+    it("Multiple @inherits - previous ones override later ones", function () {
         // myFunction4 should get our local x, y from myFunction, z from myFunction2
         expect(myFunction4.params.length).toEqual(3);
         var x = getParamByName(myFunction4, 'x'),
@@ -122,7 +122,7 @@ describe("inheritDoc plugin", function() {
             z = getParamByName(myFunction4, 'z'),
             yo = getParamByName(myFunction, 'y'),
             z3 = getParamByName(myFunction2, 'z')
-        console.log(myFunction4);
+        //console.log(myFunction4);
         expect(x).not.toEqual(null);
         expect(y).not.toEqual(null);
         expect(z).not.toEqual(null);
@@ -132,13 +132,13 @@ describe("inheritDoc plugin", function() {
     });
 
     // OVERRIDE
-    xit("@override: guesses the correct symbol to inherit from", function () {
-        // MySubclass.doStuff @override from MyClass.doStuff
-        expect(typeof doStuffSubclass.inheritdocs).toEqual('object');
-        expect(doStuffSubclass.inheritdocs[0]).toEqual('MyClass#doStuff');
-    });
+//    xit("@override: guesses the correct symbol to inherit from", function () {
+//        // MySubclass.doStuff @override from MyClass.doStuff
+//        expect(typeof doStuffSubclass.inheritdocs).toEqual('object');
+//        expect(doStuffSubclass.inheritdocs[0]).toEqual('MyClass#doStuff');
+//    });
 
-    xit("@override: adds link to overridden function in @see", function () {
+    it("@override: adds link to overridden function in @see", function () {
         expect(typeof doStuffSubclass.see).toEqual('object');
         expect(doStuffSubclass.see.indexOf('MyClass#doStuff')).not.toEqual(-1);
     });
@@ -167,7 +167,7 @@ describe("inheritDoc plugin", function() {
         // MySubclass2#doStuff extends MyClass2#doStuff extends MySubclass#doStuff 
 
         // foo argument
-        console.log(doStuffSubclass2);
+        //console.log(doStuffSubclass2);
         expect(doStuffSubclass2.params.length).toEqual(1);
         var foo = getParamByName(doStuffSubclass, 'foo'),
             foo2 = getParamByName(doStuffSubclass2, 'foo');
