@@ -68,23 +68,19 @@ function MySubclass() {
 /** Another subclass to demonstrate that @override works when they are out of
  * file order.
  * @class
+ * @inheritparams MyClass2
  * @extends MyClass2 */
-function MySubclass2() {
+function MySubclass2(x) {
     /** This description should override the inherited one
      * @override */
     this.doStuff2 = function (baz) {
     };
-
-    // Test that overriding a grandparent works.
-    /** @override */
-    this.doStuff = function (foo) {
-    };
 }
 
 /** A class
- * @class
- * @extends MySubclass */
-function MyClass2() {
+ * @param {number} x - initial
+ * @class */
+function MyClass2(x) {
     /** A function that does stuff too.
      * @param {number} baz - asdf
      */

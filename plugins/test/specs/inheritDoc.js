@@ -11,11 +11,12 @@ describe("inheritDoc plugin", function() {
         myFunction2 = docSet.getByLongname('myFunction2')[0],
         myFunction3 = docSet.getByLongname('myFunction3')[0],
         myFunction4 = docSet.getByLongname('myFunction4')[0],
+        myClass2 = docSet.getByLongname('MyClass2')[0],
+        mySubclass2 = docSet.getByLongname('MySubclass2')[0],
         doStuff = docSet.getByLongname('MyClass#doStuff')[0],
-        doStuffSubclass = docSet.getByLongname('MySubclass#doStuff')[0];
+        doStuffSubclass = docSet.getByLongname('MySubclass#doStuff')[0],
         doStuff2 = docSet.getByLongname('MyClass2#doStuff2')[0],
         doStuff2Subclass2 = docSet.getByLongname('MySubclass2#doStuff2')[0];
-        doStuffSubclass2 = docSet.getByLongname('MySubclass2#doStuff')[0];
 
     function getParamByName(func, name) {
         for (var i = 0; i < func.params.length; ++i) {
@@ -143,7 +144,7 @@ describe("inheritDoc plugin", function() {
         expect(doStuffSubclass.see.indexOf('MyClass#doStuff')).not.toEqual(-1);
     });
 
-    xit("@override: inherits description/params/returns with possible overrides", function () {
+    it("@override: inherits description/params/returns with possible overrides", function () {
         // # params
         expect(doStuffSubclass.params.length).toEqual(2);
         var foo = getParamByName(doStuffSubclass, 'foo'),
@@ -163,6 +164,29 @@ describe("inheritDoc plugin", function() {
         expect(doStuffSubclass.returns[0].description).toEqual('another explanation');
     });
 
+    it("@inheritparams: a class can inheritparams another one.", function () {
+        expect(myClass2.params.length).toEqual(1);
+        expect(mySubclass2.params.length).toEqual(1);
+        expect(myClass2.params[0].description).toEqual(mySubclass2.params[0].description);
+        expect(myClass2.params[0].description).toEqual('initial');
+    });
+
+    it("@override: if the @override declaration occurs before the parent function definition it still works", function () {
+        expect(doStuff2Subclass2.params.length).toEqual(1);
+        var baz = getParamByName(doStuff2Subclass2, 'baz'),
+            bazO = getParamByName(doStuff2, 'baz');
+
+        expect(baz).not.toEqual(null);
+        expect(bazO).not.toEqual(null);
+
+        expect(baz.description).toEqual(bazO.description);
+        expect(doStuff2Subclass2.description).toEqual('This description should override the inherited one');
+        expect(doStuff2.description).toEqual('A function that does stuff too.');
+    });
+
+    // NOPE: DOESN'T WORK. Don't know how to implement intelligently (could
+    // just try walking up the parent chain, but what if it's out of order?
+    // I really need a "finishedAllDoclets" event).
     xit("@override: overriding a function only documented in a grandparent class works", function () {
         // MySubclass2#doStuff extends MyClass2#doStuff extends MySubclass#doStuff 
 
@@ -180,7 +204,4 @@ describe("inheritDoc plugin", function() {
         expect(doStuffSubclass2.description).toEqual(doStuffSubclass.description);
     });
 
-    xit("@override: if the @override declaration occurs before the parent function definition it still works", function () {
-
-    });
 });
