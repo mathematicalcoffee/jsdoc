@@ -66,14 +66,50 @@
 //
 // (This might conflict with Closure Compiler's @inheritDoc command - should I
 // rename mine to avoid confusion?)
+//
+// CAVEATS:
+// The 'override' tag will *only* work if the superclass method is explicitly
+// documented. For example:
+//
+///** A class
+// * @class */
+// function MyClass() {
+//     /** A function
+//      * @param {number} bar - parameter */
+//     this.foo = function (bar) {};
+// }
+//
+// /** A subclass
+//  * @extends MyClass
+//  * @class */
+// function MyClass2() {
+// }
+//
+// /** Another subclass
+//  * @extends MyClass2
+//  * @class */
+// function MyClass3() {
+//     /** @override */
+//     this.foo = function (bar) {};
+// }
+//
+// In the above, MyClass3.foo will *not* have its documentation
+// populated from MyClass because MyClass2.foo is not explicitly documented
+// (although it exists as it gets it from MyClass).
 
 var completedDoclets = {};
 var waitingFor = {};
-var waitingForParent = [];
-var waitingForName = {};
+var waiting = {}; // just so we can search through both completed and waiting doclets.
+var waitingForParent = {};
+
+
 var scopeToPunc = { 'static': '.', 'inner': '~', 'instance': '#' };
-//var lookingForSuperclass = {};
-//var deferred = [];
+var scalars_to_inherit = ['description', 'summary', 'classdesc'];
+
+/** Convenience function */
+function log(message) {
+    //console.log(message);
+}
 
 function firstWordOf(string) {
     var m = /^(\S+)/.exec(string);
@@ -81,10 +117,8 @@ function firstWordOf(string) {
     else { return ''; }
 }
 
-var scalars_to_inherit = ['description', 'summary', 'classdesc'];
-
 function inherit(from, to) {
-    console.log('making ' + to.name + ' inherit from ' + from.name);
+    log('making ' + to.name + ' inherit from ' + from.name);
     if (to.returns === undefined || !to.returns.length) {
         to.returns = from.returns;
     }
@@ -100,7 +134,6 @@ function inherit(from, to) {
         // confusing when there are undocumented parameters and inherited
         // parameters).
         for (var j = 0; j < paramNames.length; ++j) {
-            //console.log(to.name + ': ' + paramNames[j]);
             var pName = paramNames[j];
             var param = from.params.filter(function (p) {
                 return p.name === pName;
@@ -122,8 +155,6 @@ function inherit(from, to) {
                 if (param) {
                     to.params.push(param);
                 } else {
-                    //console.log('adding undocumented parameter ' + pName
-                    //        + ' to ' + to.name);
                     to.params.push({
                         name: pName,
                         description: "undocumented",
@@ -159,7 +190,7 @@ function addInherit(doclet, ancestor) {
         doclet.inheritdocs = [];
     }
     doclet.inheritdocs.push(ancestor);
-    console.log('addInherit: ' + (doclet.meta.code ? doclet.meta.code.name : 'UNDEFINED') + "'s inheritdocs: " + doclet.inheritdocs);
+    log('addInherit: ' + (doclet.meta.code ? doclet.meta.code.name : 'UNDEFINED') + "'s inheritdocs: " + doclet.inheritdocs);
 }
 
 /** Determines whether this doclet is waiting for documentation from any
@@ -184,7 +215,6 @@ function isComplete(doclet) {
  * @see processInherits
  * @inheritparams addInherit */
 function onCompleteDoclet(doclet) {
-    //console.log('processin doclets waiting on ' + doclet.longname);
     // `doclet` has just been added to completedDoclets.
     var waiting = waitingFor[doclet.longname];
     if (!waiting) {
@@ -192,10 +222,11 @@ function onCompleteDoclet(doclet) {
     }
 
     for (var i = 0; i < waiting.length; ++i) {
-        console.log('doclet ' + waiting[i].longname + ' was waiting on ' + doclet.longname);
+        log('doclet ' + waiting[i].longname + ' was waiting on ' + doclet.longname);
         processInherits(waiting[i]);
     }
     delete waitingFor[doclet.longname];
+    delete waiting[doclet.longname];
 }
 
 /** Marks a doclet as being complete.
@@ -206,7 +237,7 @@ function onCompleteDoclet(doclet) {
  * @param {Doclet} doclet - a doclet.
  */
 function markComplete(doclet) {
-    console.log('markComplete: ' + doclet.longname);
+    log('markComplete: ' + doclet.longname);
     completedDoclets[doclet.longname] = doclet;
     onCompleteDoclet(doclet);
 }
@@ -220,7 +251,7 @@ function markComplete(doclet) {
  * @inheritparams markComplete */
 function processInherits(doclet) {
     var i = doclet.inheritdocs.length;
-    console.log('processInherits for ' + doclet.longname + ': ' + doclet.inheritdocs);
+    log('processInherits for ' + doclet.longname + ': ' + doclet.inheritdocs);
     // note: later declarations will override earlier ones.
     while (i--) {
         var inheritFrom = doclet.inheritdocs[i];
@@ -232,6 +263,7 @@ function processInherits(doclet) {
                 waitingFor[inheritFrom] = [];
             }
             waitingFor[inheritFrom].push(doclet);
+            waiting[doclet.longname] = doclet;
         }
     }
     if (!doclet.inheritdocs.length) {
@@ -267,37 +299,12 @@ exports.defineTags = function (dictionary) {
             if (!id) {
                 return;
             }
-            console.log('@override found: ' + doclet.meta.code.name + ' (' + id + ')'); // doclet.meta.lineno
+            log('@override found: ' + doclet.meta.code.name + ' (' + id + ')'); // doclet.meta.lineno
             doclet.inheritParamsOnly = false;
             if (!doclet.see) {
                 doclet.see = [];
             }
-            var node = doclet.meta.code.node;
-            // must now look up the doclet for MyClass
-            if (node) { // todo - astnodeToMemberof has MyClass~
-                // TODO: app is not defined (jshint)
-                var parentClass = app.jsdoc.parser.resolveThis(node);
-                // TODO: what if multiple @extends?
-                console.log('   ' + parentClass); // BAH ANONYMOUS
-                // todo: longname or name?
-                // astnodeToMemberof is MyClass2~ - use that?
-                // parent node must exist already if we're up to the function
-                // (TODO: define MyClass.foo = {} and *then* MyClass?).
-                var parentD = app.jsdoc.parser.results().filter(function (d) {
-                    return (d.longname || d.name) === parentClass;
-                })[0];
-                //console.log('   parentD: ' + parentD);
-                if (parentD) {
-                    // BIG TODO: doclet.name doesn't yet exist.
-                    //console.log(parentD);
-                    // addInheritsForSubclass(doclet, parentD);
-                    // TODO: .push?
-                    waitingForName[id] = parentD;
-                }
-            } else {
-                console.log("ERROR: could not find parent class for function " +
-                        doclet.name);
-            }
+            waitingForParent[id] = true;
         }
     });
 };
@@ -311,7 +318,7 @@ exports.defineTags = function (dictionary) {
  */
 function addInheritsForSubclass(doclet, classDoclet) {
     if (classDoclet.augments) {
-        console.log('addInheritsForSubclass: ' + doclet.name + ' from ' + classDoclet.augments);
+        log('addInheritsForSubclass: ' + doclet.name + ' from ' + classDoclet.augments);
         for (var i = 0; i < classDoclet.augments.length; ++i) {
             var parentFunction = classDoclet.augments[i] +
                                  (scopeToPunc[doclet.scope] || '#') +
@@ -320,6 +327,11 @@ function addInheritsForSubclass(doclet, classDoclet) {
             doclet.see.push(parentFunction);
         }
     }
+}
+
+/** Finds the doclet with name `longname` (if it's been processed yet). */
+function findDoclet(longname) {
+    return (completedDoclets[longname] || waiting[longname]);
 }
 
 // need to add to postProcess really...
@@ -332,21 +344,24 @@ exports.handlers = {
         }
 
         var doclet = e.doclet;
-        //console.log(doclet);
         //TODO: switch longnames to ids
         var id = doclet.meta.code.id;
-        console.log('new doclet: ' + id);
-        if (waitingForName[id]) {
-            console.log("   FOUND");
-            addInheritsForSubclass(doclet, waitingForName[id]);
-            delete waitingForName[id];
+        log('new doclet: ' + id + ' ' + (doclet.longname || doclet.name));
+        if (waitingForParent[id]) {
+            var parentClass = doclet.memberof;
+            log(parentClass);
+            var parentD = findDoclet(parentClass);
+            if (!parentD) {
+                log('!! Could not find doclet for ' + parentClass);
+            } else {
+                addInheritsForSubclass(doclet, parentD);
+            }
         }
-
         if (isComplete(doclet)) {
-            console.log('   doclet: ' + doclet.longname + ' completed');
+            log('   doclet: ' + doclet.longname + ' completed');
             markComplete(doclet);
         } else {
-            console.log('   processing doclet: ' + doclet.longname);
+            log('   processing doclet: ' + doclet.longname);
             processInherits(doclet);
         }
     }
