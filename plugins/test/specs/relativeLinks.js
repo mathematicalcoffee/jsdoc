@@ -13,10 +13,10 @@ describe("relativeLinks plugin", function() {
         module = docSet2.getByLongname('module:plugins/relativeLinks')[0],
         MyNamespace = docSet.getByLongname('MyNamespace')[0],
         MyEnumVAL1 = docSet.getByLongname('MyEnum.VAL1')[0],
-        resolveLinks = docSet2.getByLongname('module:plugins/relativeLinks~resolveLinks')[0];
-        handlers = docSet2.getByLongname('module:plugins/relativeLinks.handlers')[0];
-        TestClass = docSet2.getByLongname('module:plugins/relativeLinks~TestClass')[0];
-        MySubclass = docSet2.getByLongname('module:plugins/relativeLinks~MySubclass')[0],
+        resolveLinks = docSet2.getByLongname('module:plugins/relativeLinks~resolveLinks')[0],
+        handlers = docSet2.getByLongname('module:plugins/relativeLinks.handlers')[0],
+        TestClass = docSet2.getByLongname('module:plugins/relativeLinks~TestClass')[0],
+        MySubclass = docSet2.getByLongname('module:plugins/relativeLinks~MySubclass')[0];
 
     it("classdesc is affected", function () {
         expect(MyClass.classdesc).toEqual("See {@link MyClass#foo}, {@link MyClass~foo} and {@link MyClass.foo}.");
