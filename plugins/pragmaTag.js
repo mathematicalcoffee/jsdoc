@@ -9,11 +9,6 @@
  * a space added in between because I thought I'd document this module in JSDOC3
  * but it can't handle end comments inside the legitimate comment!
  *
- * It's a bit hacky beacuse 'jsdocCommentFound' event doesn't work so we use
- * 'symbolFound' event, consequence of which:
- *
- * * virtual doclets (no associated code) will be ignored.
- *
  * @example
  * // In this example, we add @default, @const and @type {string} to every
  * // constant between the @+ and @-, saving a bit of typing and improving
@@ -37,10 +32,14 @@
  */
 
 var error = require('jsdoc/util/error');
+var doclet = require('jsdoc/doclet');
+
 var addedComments = [];
 var first = -1;
 var last = -1;
 var incompletedStack = [];
+
+var currentlyInEffect = [];
 
 // tag finding happens separately to the handlers so you'll have to determine
 // line numbers.
@@ -73,6 +72,7 @@ exports.defineTags = function (dictionary) {
             });
             incompletedStack.push(addedComments.length - 1);
             doclet.addTag('undocumented');
+            currentlyInEffect.push(commentText);
         }
     });
 
@@ -90,6 +90,7 @@ exports.defineTags = function (dictionary) {
             }
             addedComments[i].end = last;
             doclet.addTag('undocumented');
+            currentlyInEffect.pop();
         }
     });
 };
@@ -102,6 +103,33 @@ exports.handlers = {
                 "$1\n/** @undocumented */");
         e.source = e.source.replace(/(\/\*\*[^\*\/]*?[\*\s]*@\+(\*(?!\/)|[^*])*\*\/)/g,
                 "$1\n/** @undocumented */");
+    },
+
+    // note: jsdocCommentFound is the ideal event to use and we modify
+    // e.comment which is ideally used to make a new doclet.
+    //
+    // HOWEVER, the modified e.comment is *only* used for a new doclet
+    // if the doclet is virtual!
+    // So between jsdocCommentFound (where modifying e.comment only works for
+    // virtual doclets) and symbolFound (which only fires for non-virtual
+    // doclets) we cover all doclets.
+    // See # 228
+    // Also note that jsdocCommentFound is called during the same run of the
+    // code that the onTagged functions are, whereas symbolFound is called
+    // after all of that (?)
+    jsdocCommentFound: function (e) {
+        // what about the @undocumented !!!
+        if (!currentlyInEffect.length) {
+            return;
+        }
+        if (/@[+\-]/.test(e.comment)) {
+            return;
+        }
+
+        for (var i = 0; i < currentlyInEffect.length; ++i) {
+            e.comment = e.comment.replace(/\s*\*\/\s*$/,
+                    '\n' + currentlyInEffect[i] + '\n*/');
+        }
     },
 
     symbolFound: function (e) {

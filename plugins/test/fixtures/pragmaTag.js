@@ -3,6 +3,8 @@
  * @const */
 /** @+
  * @type {string} */
+// a confounding undocumented variable.
+var ljasdf;
 
 /** a constant */
 const A = 'fda';
@@ -16,6 +18,12 @@ const C = 3;
 
 /** @+
  * @type {number} */
+
+/** A virtual doclet.
+ * @name F
+ * @default 2 */
+// a confounding undocumented variable.
+var sdf;
 
 /** A number */
 const D = 1;
