@@ -289,7 +289,9 @@ exports.defineTags = function (dictionary) {
             if (!doclet.see) {
                 doclet.see = [];
             }
-            doclet.see.push(ancestor);
+            if (doclet.see.indexOf(ancestor) === -1) {
+                doclet.see.push(ancestor);
+            }
         }
     });
     dictionary.defineTag('override', {
@@ -324,7 +326,9 @@ function addInheritsForSubclass(doclet, classDoclet) {
                                  (scopeToPunc[doclet.scope] || '#') +
                                  doclet.name;
             addInherit(doclet, parentFunction);
-            doclet.see.push(parentFunction);
+            if (doclet.see.indexOf(parentFunction) === -1) {
+                doclet.see.push(parentFunction);
+            }
         }
     }
 }
