@@ -51,12 +51,3 @@ sample quicker to read.
      * @default                          //
      * @type {number} */                 //
     const MY_CONSTANT4 = 4;              //
-
-## Known Issues
-
-Virtual doclets do not have the additional tags added to them. This is because
-I am modifying each doclet's comment before it is parsed to a doclet, which
-means I have to use event 'symbolFound' or 'onjsdocCommentFound'. The latter is
-exactly what I want, but it *doesn't* use the modified comment to generate
-the doclet, and 'symbolFound' only fires when it finds a piece of code,
-so it won't fire for virtual doclets with no associated code. See jsdoc3/jsdoc#228.

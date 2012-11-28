@@ -9,7 +9,8 @@ describe("pragmaTag plugin", function() {
         B = docSet.getByLongname('B')[0],
         C = docSet.getByLongname('C')[0],
         D = docSet.getByLongname('D')[0],
-        E = docSet.getByLongname('E')[0];
+        E = docSet.getByLongname('E')[0],
+        F = docSet.getByLongname('F')[0];
 //        var path = require("path"),
 //            docSet = parser.parse([path.join(env.dirname, "plugins/test/fixtures/pragmaTag.js")]),
 
@@ -37,5 +38,12 @@ describe("pragmaTag plugin", function() {
         expect(E.type.names[0]).toEqual('number');
 
         expect(C.type).toBeUndefined();
+    });
+
+    it("Virtual doclets are affected.", function () {
+        expect(F.kind).toEqual('constant');
+        expect(F.defaultvalue).toBeDefined();
+        expect(F.defaultvalue).toEqual('2');
+        expect(F.type.names[0]).toEqual('number');
     });
 });
