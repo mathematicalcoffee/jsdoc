@@ -1,9 +1,9 @@
 ## registerLink
 This plugin allows one to register a symbol to a URL with a new tag @registerlink.
 
-*Status*: ready, stable.  
-*Location*: [myPlugins branch on my jsdoc3 fork](https://github.com/mathematicalcoffee/jsdoc/blob/myPlugins/plugins/registerLink.js)  
-*Author*
+**Status**: ready, stable.  
+**Location**: [myPlugins branch on my jsdoc3 fork](https://github.com/mathematicalcoffee/jsdoc/blob/myPlugins/plugins/registerLink.js)  
+**Author**: mathematical.coffee <mathematical.coffee@gmail.com>
 
 ### Description
 This plugin allows one to register a symbol to a URL with a new tag `@registerlink`.
