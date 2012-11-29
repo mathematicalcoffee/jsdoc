@@ -125,7 +125,7 @@ function inherit(from, to) {
 
     if (from.params && from.params.length) {
 
-        var paramNames = (to.meta && to.meta.code.paramnames || false);
+        var paramNames = (to.meta && to.meta.code.paramnames || []);
         if (!to.params) {
             to.params = [];
         }
@@ -250,7 +250,7 @@ function markComplete(doclet) {
  *
  * @inheritparams markComplete */
 function processInherits(doclet) {
-    var i = doclet.inheritdocs.length;
+    var i = doclet.inheritdocs && doclet.inheritdocs.length || 0;
     log('processInherits for ' + doclet.longname + ': ' + doclet.inheritdocs);
     // note: later declarations will override earlier ones.
     while (i--) {
@@ -266,7 +266,7 @@ function processInherits(doclet) {
             waiting[doclet.longname] = doclet;
         }
     }
-    if (!doclet.inheritdocs.length) {
+    if (!doclet.inheritdocs || !doclet.inheritdocs.length) {
         delete doclet.inheritdocs;
         markComplete(doclet);
     }
