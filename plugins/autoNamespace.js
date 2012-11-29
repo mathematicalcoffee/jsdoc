@@ -377,10 +377,12 @@ exports.handlers = {
         // copy over the @summary and @description of the file to the
         // namespace doclet (if it didn't exist).
         //console.log('fileDoclet: ' + '\n' + fileDoclet.description);
-        if (!namespaceDoclet.description && fileDoclet.description) {
+        if (namespaceDoclet && fileDoclet &&
+                !namespaceDoclet.description && fileDoclet.description) {
             namespaceDoclet.description = fileDoclet.description;
         }
-        if (!namespaceDoclet.summary && fileDoclet.summary) {
+        if (namespaceDoclet && fileDoclet &&
+                !namespaceDoclet.summary && fileDoclet.summary) {
             namespaceDoclet.summary = fileDoclet.summary;
         }
 
