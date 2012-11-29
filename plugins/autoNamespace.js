@@ -335,7 +335,7 @@ exports.handlers = {
     beforeParse: function (e) {
         // no detected @autonamespace tag (although they could trick us by
         // including it in a string)
-        if (!/\/\*(?:\*|\!\*)[^\*\/]*?(?:[^\*]|\*(?!\/))*^[\*\s]*@autonamespace/m.test(e.source)) {
+        if (!/(?:^|[^'"])\/\*(?:\*|\!\*)(?![\*\/])(?:(?:[^\*]|\*(?!\/))+^)?[\*\s]*@autonamespace/m.test(e.source)) {
             var tmp = path.basename(e.filename).split('.')[0];
             // first letter capital
             tmp = sanitizeNamespace(tmp);
