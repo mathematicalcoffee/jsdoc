@@ -66,7 +66,7 @@
 var textTags = ['comment', 'description', 'classdesc', 'params',
     'returns', 'properties', 'deprecated', 'summary', 'since', 'todo'];
 // these tags always refer to a symbol and do not need {@link }
-var symbolLinkTags = ['this', 'augments'];
+var symbolLinkTags = ['this', 'augments', 'inheritdocs'];
 // These tags can have either {@link} or a straight symbol
 var mixedTags = ['see'];
 // these tags are handled explicitly
