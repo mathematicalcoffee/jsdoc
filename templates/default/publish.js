@@ -88,8 +88,10 @@ function buildNav(members) {
     var nav = '<h2><a href="index.html">Index</a></h2>',
         seen = {};
 
+    nav += '<ul class="collapsibleList">';
+
     if (members.modules.length) {
-        nav += '<h3>Modules</h3><ul>';
+        nav += '<li><h3>Modules</h3><ul>';
         members.modules.forEach(function(m) {
             if ( !hasOwnProp.call(seen, m.longname) ) {
                 nav += '<li>'+linkto(m.longname, m.name)+'</li>';
@@ -97,11 +99,11 @@ function buildNav(members) {
             seen[m.longname] = true;
         });
         
-        nav += '</ul>';
+        nav += '</ul></li>';
     }
     
     if (members.externals.length) {
-        nav += '<h3>Externals</h3><ul>';
+        nav += '<li><h3>Externals</h3><ul>';
         members.externals.forEach(function(e) {
             if ( !hasOwnProp.call(seen, e.longname) ) {
                 nav += '<li>'+linkto( e.longname, e.name.replace(/(^"|"$)/g, '') )+'</li>';
@@ -109,7 +111,7 @@ function buildNav(members) {
             seen[e.longname] = true;
         });
         
-        nav += '</ul>';
+        nav += '</ul></li>';
     }
 
     if (members.classes.length) {
@@ -122,7 +124,7 @@ function buildNav(members) {
                 moduleSameName[0].module = c;
             }
             if (moduleClasses !== -1 && moduleClasses < members.classes.length) {
-                nav += '<h3>Classes</h3><ul>';
+                nav += '<li><h3>Classes</h3><ul>';
                 moduleClasses = -1;
             }
             if ( !hasOwnProp.call(seen, c.longname) ) {
@@ -131,11 +133,11 @@ function buildNav(members) {
             seen[c.longname] = true;
         });
         
-        nav += '</ul>';
+        nav += '</ul></li>';
     }
     
     if (members.namespaces.length) {
-        nav += '<h3>Namespaces</h3><ul>';
+        nav += '<li><h3>Namespaces</h3><ul>';
         members.namespaces.forEach(function(n) {
             if ( !hasOwnProp.call(seen, n.longname) ) {
                 nav += '<li>'+linkto(n.longname, n.name)+'</li>';
@@ -143,11 +145,11 @@ function buildNav(members) {
             seen[n.longname] = true;
         });
         
-        nav += '</ul>';
+        nav += '</ul></li>';
     }
     
     if (members.mixins.length) {
-        nav += '<h3>Mixins</h3><ul>';
+        nav += '<li><h3>Mixins</h3><ul>';
         members.mixins.forEach(function(m) {
             if ( !hasOwnProp.call(seen, m.longname) ) {
                 nav += '<li>'+linkto(m.longname, m.name)+'</li>';
@@ -155,20 +157,20 @@ function buildNav(members) {
             seen[m.longname] = true;
         });
         
-        nav += '</ul>';
+        nav += '</ul></li>';
     }
 
     if (members.tutorials.length) {
-        nav += '<h3>Tutorials</h3><ul>';
+        nav += '<li><h3>Tutorials</h3><ul>';
         members.tutorials.forEach(function(t) {
             nav += '<li>'+tutoriallink(t.name)+'</li>';
         });
         
-        nav += '</ul>';
+        nav += '</ul></li>';
     }
     
     if (members.globals.length) {
-        nav += '<h3>Global</h3><ul>';
+        nav += '<li><h3>Global</h3><ul>';
         members.globals.forEach(function(g) {
             if ( g.kind !== 'typedef' && !hasOwnProp.call(seen, g.longname) ) {
                 nav += '<li>'+linkto(g.longname, g.name)+'</li>';
@@ -176,8 +178,9 @@ function buildNav(members) {
             seen[g.longname] = true;
         });
         
-        nav += '</ul>';
+        nav += '</ul></li>';
     }
+    nav += '</ul>';
 
     return nav;
 }

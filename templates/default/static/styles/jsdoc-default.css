@@ -111,6 +111,22 @@ nav a:active {
     color: #5C5954;
 }
 
+/* Collapsible lists in the nav bar (<ul class="collapsibleList">) */
+/*
+.collapsibleList li {
+    list-style-type: none;
+    cursor: auto;
+}
+li.collapsibleListOpen {
+    list-style-image:url('button-open.png');
+    cursor: pointer;
+}
+li.collapsibleListClosed {
+    list-style-image:url('button-closed.png');
+    cursor: pointer;
+}
+*/
+
 footer {
     display: block;
     padding: 6px;
