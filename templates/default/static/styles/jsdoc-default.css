@@ -83,8 +83,6 @@ nav ul {
     line-height: 17px;
     padding:11px;
     margin:0;
-    /*list-style-type:none;*/
-    /*list-style-position: inside;*/
 }
 
 nav h2 a, nav h2 a:visited {
@@ -115,7 +113,6 @@ nav a:active {
 /* Collapsible lists in the nav bar (<ul class="collapsibleList">) */
 nav li{
     padding:0;
-    /*list-style-position:inside; TODO: if this is enabled i need to offset li children*/
     list-style-image: none;
     cursor:auto;
 }
