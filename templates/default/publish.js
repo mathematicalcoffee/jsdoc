@@ -85,6 +85,51 @@ function generate(title, docs, filename) {
  * @return {string} The HTML for the navigation sidebar.
  */
 function buildNav(members) {
+    // Using jqTree 0.14: http://mbraak.github.com/jqTree/
+    // create tree data. Each node is {label:string, id:any, children: [nodes]}
+    // The id is needed to save where the tree is (not documented in jqTree!),
+    // and should evaluate to true (don't use 0).
+    var seen = {},
+        id = 1;
+    return Object.keys(members).map(function(h) {
+        return {
+            label: '<h3>' + h[0].toUpperCase() + h.substr(1) + '</h3>',
+            id: id++,
+            children: members[h].filter(function (d) {
+                return (!hasOwnProp.call(seen, d.longname) && 
+                        (h === 'globals' ? d.kind !== 'typedef' : true))
+            }).map(function (d) {
+                var node = { id: id++ };
+                if (h !== 'tutorials') {
+                    seen[d.longname] = true;
+                }
+                switch (h) {
+                    case 'externals':
+                        node.label = linkto(d.longname, d.name.replace(/(^"|"$)/g, ''));
+                    case 'classes':
+                        // see if there's a module with the same name as this class.
+                        var moduleSameName = find({kind: 'module', longname: d.longname});
+                        if (moduleSameName.length) {
+                            // this code doesn't make sense - why change d.name?
+                            // why would d.name have module: in it?
+                            d.name = d.name.replace('module:', 'require("')+'")';
+                            moduleSameName[0].module = d;
+                        }
+                        node.label = linkto(d.longname, d.name);
+                    case 'tutorials':
+                        node.label = tutoriallink(d.name);
+                    default:
+                        node.label = linkto(d.longname, d.name);
+                }
+                return node;            
+            })
+        }
+    }).filter(function (n) {
+        return n.children.length;
+    });
+}
+
+function oldBuildNav(members) {
     var nav = '<h2><a href="index.html">Index</a></h2>',
         seen = {};
 
@@ -181,7 +226,6 @@ function buildNav(members) {
 
     return nav;
 }
-
 
 /**
     @param {TAFFY} taffyData See <http://taffydb.com/>.

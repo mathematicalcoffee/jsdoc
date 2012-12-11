@@ -6,11 +6,15 @@
     
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
+    <script src="http://code.jquery.com/jquery.min.js"> </script>
+    <script src="scripts/jquery.cookie.min.js"> </script>
+    <script src="scripts/tree.jquery.min.js"> </script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     <link type="text/css" rel="stylesheet" href="styles/prettify-jsdoc.css">
     <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/jqtree.css">
 </head>
 
 <body>
@@ -23,7 +27,17 @@
 </div>
 
 <nav>
-    <?js= this.nav ?>
+    <h2><a href="index.html">Index</a></h2>
+    <div id="navTree"></div>
+    <script>
+        $(function() {
+            $('#navTree').tree({
+                data: <?js= JSON.stringify(this.nav) ?>,
+                saveState: 'jsdoc-navtree',
+                autoEscape: false
+            });
+        });
+    </script>
 </nav>
 
 <br clear="both">
