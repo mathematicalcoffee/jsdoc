@@ -16,7 +16,6 @@
     <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
     <link type="text/css" rel="stylesheet" href="styles/jqtree.css">
 </head>
-
 <body>
 
 <div id="main">
@@ -31,11 +30,25 @@
     <div id="navTree"></div>
     <script>
         $(function() {
-            $('#navTree').tree({
+            var tree = $('#navTree');
+            // generate the collapsible tree.
+            tree.tree({
                 data: <?js= JSON.stringify(this.nav) ?>,
                 saveState: 'jsdoc-navtree',
                 autoEscape: false
             });
+            var current = tree.tree('getNodeById', '<?js= filename ?>');
+            // expand the node for the current. If it's a leaf node we have to expand the parent.
+            if (current) {
+                // TODO: this should not be saved (but manual changes should).
+                if (current.isFolder()) {
+                    tree.tree('openNode', current, false);
+                } else if (current.parent) {
+                    tree.tree('openNode', current.parent, false);
+                }
+                // add id="current-page" to that node.
+                current.element.id = 'current-page';
+            }
         });
     </script>
 </nav>

@@ -61,7 +61,8 @@ function addAttribs(f) {
 function generate(title, docs, filename) {
     var docData = {
         title: title,
-        docs: docs
+        docs: docs,
+        filename: filename
     };
     
     var outpath = path.join(outdir, filename),
@@ -99,7 +100,7 @@ function buildNav(members) {
                 return (!hasOwnProp.call(seen, d.longname) && 
                         (h === 'globals' ? d.kind !== 'typedef' : true))
             }).map(function (d) {
-                var node = { id: id++ };
+                var node = { id: helper.longnameToUrl[d.longname] || id++ };
                 if (h !== 'tutorials') {
                     seen[d.longname] = true;
                 }
