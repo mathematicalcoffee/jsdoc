@@ -167,6 +167,8 @@ function buildNav(members) {
     }).filter(function (n) {
         return n.children.length;
     });
+    // TODO:
+    // Tutorials should be handled differently as they are not doclets.
     return out;
 }
 
@@ -279,6 +281,7 @@ exports.publish = function(taffyData, opts, tutorials) {
     });
     
     var members = helper.getMembers(data);
+    var membersH = helper.getMembersAsHierarchy(data);
     members.tutorials = tutorials.children;
 
     // add template helpers
@@ -288,7 +291,7 @@ exports.publish = function(taffyData, opts, tutorials) {
     view.htmlsafe = htmlsafe;
 
     // once for all
-    view.nav = buildNav(members);
+    view.nav = buildNav(membersH);
 
     if (members.globals.length) { generate('Global', members.globals, globalUrl); }
     
