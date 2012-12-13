@@ -114,7 +114,7 @@ function buildNav(members) {
             if (isTarget) {
                if (hasOwnProperty.call(seen, d.longname)) {
                 return false;
-               } else if (kind !== 'tutorial') {
+               } else {
                    seen[d.longname] = true;
                }
             }
@@ -136,9 +136,6 @@ function buildNav(members) {
                     }
                     node.label = linkto(d.longname, d.name);
                     break;
-                case 'tutorial':
-                    node.label = tutoriallink(d.name);
-                    break;
                 default:
                     node.label = linkto(d.longname, d.name);
                     break;
@@ -158,7 +155,7 @@ function buildNav(members) {
             return node;
         }).filter(function (n) {return n;});
     }
-    var out = Object.keys(members).map(function (type) {
+    var out = ['classes', 'externals', 'globals', 'mixins', 'modules', 'namespaces'].map(function (type) {
         return {
             label: '<h3>' + type[0].toUpperCase() + type.substr(1) + '</h3>',
             id: id++,
@@ -167,8 +164,20 @@ function buildNav(members) {
     }).filter(function (n) {
         return n.children.length;
     });
-    // TODO:
+
     // Tutorials should be handled differently as they are not doclets.
+    if (members.tutorials.length) {
+        out.push({
+            label: '<h3>Tutorials</h3>',
+            id: id++,
+            children: members.tutorials.map(function (t) {
+                return {
+                    id: helper.tutorialToUrl(t.name), // <-- URL of tutorial
+                    label: tutoriallink(t.name)
+                };
+            })
+        });
+    }
     return out;
 }
 
@@ -282,6 +291,7 @@ exports.publish = function(taffyData, opts, tutorials) {
     
     var members = helper.getMembers(data);
     var membersH = helper.getMembersAsHierarchy(data);
+    membersH.tutorials = tutorials.children;
     members.tutorials = tutorials.children;
 
     // add template helpers
