@@ -73,6 +73,15 @@ function generate(title, docs, filename) {
     fs.writeFileSync(outpath, html);
 }
 
+var typeMap = {
+    classes: 'class',
+    externals: 'external',
+    globals: ['member', 'function', 'constant'],
+    mixins: 'mixin',
+    modules: 'module',
+    namespaces: 'namespace',
+    tutorials: 'tutorial'
+}
 /**
  * Create the navigation sidebar.
  * @param {object} members The members that will be used to create the sidebar.
@@ -90,142 +99,75 @@ function buildNav(members) {
     // create tree data. Each node is {label:string, id:any, children: [nodes]}
     // The id is needed to save where the tree is (not documented in jqTree!),
     // and should evaluate to true (don't use 0).
+
     var seen = {},
         id = 1;
-    return Object.keys(members).map(function(h) {
+    // I don't have id or label, but I have doclet & children so I will generate it.
+    function _helper(nodes, desiredTypes) {
+        return nodes.map(function (n) {
+            var d = n.doclet,
+                kind = d.kind,
+                isTarget = (desiredTypes.indexOf(kind) > -1);
+            // want to know if it truly belongs in this list (e.g. a class
+            // in the Classes list) or is just there because it contains something
+            // that belongs (e.g. a Namespace in the Classes list).
+            if (isTarget) {
+               if (hasOwnProperty.call(seen, d.longname)) {
+                return false;
+               } else if (kind !== 'tutorial') {
+                   seen[d.longname] = true;
+               }
+            }
+            var node = {
+                id: helper.longnameToUrl[d.longname] || id++
+            };
+            switch (kind) {
+                case 'external':
+                    node.label = linkto(d.longname, d.name.replace(/(^"|"$)/g, ''));
+                    break;
+                case 'class':
+                    // see if there's a module with the same name as this class.
+                    var moduleSameName = find({kind: 'module', longname: d.longname});
+                    if (moduleSameName.length) {
+                        // this code doesn't make sense - why change d.name?
+                        // why would d.name have module: in it?
+                        d.name = d.name.replace('module:', 'require("')+'")';
+                        moduleSameName[0].module = d;
+                    }
+                    node.label = linkto(d.longname, d.name);
+                    break;
+                case 'tutorial':
+                    node.label = tutoriallink(d.name);
+                    break;
+                default:
+                    node.label = linkto(d.longname, d.name);
+                    break;
+            }
+            if (n.children && n.children.length) {
+                node.children = _helper(n.children, desiredTypes);
+            }
+
+            // TODO: somehow style isTarget nodes separately
+            /*
+            if (isTarget) {
+                node.label = '<b>' + node.label + '</b>';
+            } else {
+                node.label = '<em>' + node.label + '</em>';
+            }
+            */
+            return node;
+        }).filter(function (n) {return n;});
+    }
+    var out = Object.keys(members).map(function (type) {
         return {
-            label: '<h3>' + h[0].toUpperCase() + h.substr(1) + '</h3>',
+            label: '<h3>' + type[0].toUpperCase() + type.substr(1) + '</h3>',
             id: id++,
-            children: members[h].filter(function (d) {
-                return (!hasOwnProp.call(seen, d.longname) && 
-                        (h === 'globals' ? d.kind !== 'typedef' : true))
-            }).map(function (d) {
-                var node = { id: helper.longnameToUrl[d.longname] || id++ };
-                if (h !== 'tutorials') {
-                    seen[d.longname] = true;
-                }
-                switch (h) {
-                    case 'externals':
-                        node.label = linkto(d.longname, d.name.replace(/(^"|"$)/g, ''));
-                    case 'classes':
-                        // see if there's a module with the same name as this class.
-                        var moduleSameName = find({kind: 'module', longname: d.longname});
-                        if (moduleSameName.length) {
-                            // this code doesn't make sense - why change d.name?
-                            // why would d.name have module: in it?
-                            d.name = d.name.replace('module:', 'require("')+'")';
-                            moduleSameName[0].module = d;
-                        }
-                        node.label = linkto(d.longname, d.name);
-                    case 'tutorials':
-                        node.label = tutoriallink(d.name);
-                    default:
-                        node.label = linkto(d.longname, d.name);
-                }
-                return node;            
-            })
-        }
+            children: _helper(members[type], typeMap[type])
+        };
     }).filter(function (n) {
         return n.children.length;
     });
-}
-
-function oldBuildNav(members) {
-    var nav = '<h2><a href="index.html">Index</a></h2>',
-        seen = {};
-
-    if (members.modules.length) {
-        nav += '<h3>Modules</h3><ul>';
-        members.modules.forEach(function(m) {
-            if ( !hasOwnProp.call(seen, m.longname) ) {
-                nav += '<li>'+linkto(m.longname, m.name)+'</li>';
-            }
-            seen[m.longname] = true;
-        });
-        
-        nav += '</ul>';
-    }
-    
-    if (members.externals.length) {
-        nav += '<h3>Externals</h3><ul>';
-        members.externals.forEach(function(e) {
-            if ( !hasOwnProp.call(seen, e.longname) ) {
-                nav += '<li>'+linkto( e.longname, e.name.replace(/(^"|"$)/g, '') )+'</li>';
-            }
-            seen[e.longname] = true;
-        });
-        
-        nav += '</ul>';
-    }
-
-    if (members.classes.length) {
-        var moduleClasses = 0;
-        members.classes.forEach(function(c) {
-            var moduleSameName = find({kind: 'module', longname: c.longname});
-            if (moduleSameName.length) {
-                c.name = c.name.replace('module:', 'require("')+'")';
-                moduleClasses++;
-                moduleSameName[0].module = c;
-            }
-            if (moduleClasses !== -1 && moduleClasses < members.classes.length) {
-                nav += '<h3>Classes</h3><ul>';
-                moduleClasses = -1;
-            }
-            if ( !hasOwnProp.call(seen, c.longname) ) {
-                nav += '<li>'+linkto(c.longname, c.name)+'</li>';
-            }
-            seen[c.longname] = true;
-        });
-        
-        nav += '</ul>';
-    }
-    
-    if (members.namespaces.length) {
-        nav += '<h3>Namespaces</h3><ul>';
-        members.namespaces.forEach(function(n) {
-            if ( !hasOwnProp.call(seen, n.longname) ) {
-                nav += '<li>'+linkto(n.longname, n.name)+'</li>';
-            }
-            seen[n.longname] = true;
-        });
-        
-        nav += '</ul>';
-    }
-    
-    if (members.mixins.length) {
-        nav += '<h3>Mixins</h3><ul>';
-        members.mixins.forEach(function(m) {
-            if ( !hasOwnProp.call(seen, m.longname) ) {
-                nav += '<li>'+linkto(m.longname, m.name)+'</li>';
-            }
-            seen[m.longname] = true;
-        });
-        
-        nav += '</ul>';
-    }
-
-    if (members.tutorials.length) {
-        nav += '<h3>Tutorials</h3><ul>';
-        members.tutorials.forEach(function(t) {
-            nav += '<li>'+tutoriallink(t.name)+'</li>';
-        });
-        
-        nav += '</ul>';
-    }
-    
-    if (members.globals.length) {
-        nav += '<h3>Global</h3><ul>';
-        members.globals.forEach(function(g) {
-            if ( g.kind !== 'typedef' && !hasOwnProp.call(seen, g.longname) ) {
-                nav += '<li>'+linkto(g.longname, g.name)+'</li>';
-            }
-            seen[g.longname] = true;
-        });
-        
-        nav += '</ul>';
-    }
-
-    return nav;
+    return out;
 }
 
 /**

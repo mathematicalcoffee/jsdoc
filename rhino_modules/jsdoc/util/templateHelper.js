@@ -130,15 +130,16 @@ var find = exports.find = function(data, spec) {
  */
 exports.getMembers = function(data) {
     return {
-        classes: find( data, {kind: 'class'} ),
-        externals: find( data, {kind: 'external'} ),
-        globals: find(data, {
+        classes: exports.buildHierarchy( data, {kind: 'class'} ),
+        externals: exports.buildHierarchy( data, {kind: 'external'} ),
+        globals: exports.buildHierarchy(data, {
+            // TODO: why do we want typedef here if we filter it out in the code?
             kind: ['member', 'function', 'constant', 'typedef'],
             memberof: { isUndefined: true }
         }),
-        mixins: find( data, {kind: 'mixin'} ),
-        modules: find( data, {kind: 'module'} ),
-        namespaces: find( data, {kind: 'namespace'} )
+        mixins: exports.buildHierarchy( data, {kind: 'mixin'} ),
+        modules: exports.buildHierarchy( data, {kind: 'module'} ),
+        namespaces: exports.buildHierarchy( data, {kind: 'namespace'} )
     };
 };
 
