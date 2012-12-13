@@ -6,13 +6,16 @@
     
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
+    <script src="http://code.jquery.com/jquery.min.js"> </script>
+    <script src="scripts/jquery.cookie.min.js"> </script>
+    <script src="scripts/tree.jquery.min.js"> </script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     <link type="text/css" rel="stylesheet" href="styles/prettify-jsdoc.css">
     <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/jqtree.css">
 </head>
-
 <body>
 
 <div id="main">
@@ -23,7 +26,31 @@
 </div>
 
 <nav>
-    <?js= this.nav ?>
+    <h2><a href="index.html">Index</a></h2>
+    <div id="navTree"></div>
+    <script>
+        $(function() {
+            var tree = $('#navTree');
+            // generate the collapsible tree.
+            tree.tree({
+                data: <?js= JSON.stringify(this.nav) ?>,
+                saveState: 'jsdoc-navtree',
+                autoEscape: false
+            });
+            var current = tree.tree('getNodeById', '<?js= filename ?>');
+            // expand the node for the current. If it's a leaf node we have to expand the parent.
+            if (current) {
+                // TODO: this should not be saved (but manual changes should).
+                if (current.isFolder()) {
+                    tree.tree('openNode', current, false);
+                } else if (current.parent) {
+                    tree.tree('openNode', current.parent, false);
+                }
+                // add id="current-page" to that node.
+                current.element.id = 'current-page';
+            }
+        });
+    </script>
 </nav>
 
 <br clear="both">
