@@ -5,6 +5,7 @@
 
 var crypto = require('crypto');
 var dictionary = require('jsdoc/tag/dictionary');
+var name = require('jsdoc/name');
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
 var files = {};
@@ -139,6 +140,98 @@ exports.getMembers = function(data) {
         modules: find( data, {kind: 'module'} ),
         namespaces: find( data, {kind: 'namespace'} )
     };
+};
+
+/**
+ * Helper function that places `doclet` into a hierarchy tree at the appropriate
+ * level of nesting, creating parent nodes if need be.
+ *
+ * Suppose we have a doclet A.B.foo and we wish to place it in a hierarchy.
+ *
+ * Then we have to construct the tree:
+ * [{ doclet: A,
+ *    children: [{
+ *        doclet: B,
+ *        children: [{
+ *          doclet: foo // <-- place A.B.foo here
+ *        }]
+ *    }]
+ * }]
+ *
+ * However the A or B nodes might not yet have been created.
+ *
+ * This function creates the intermediate nodes as necessary to place
+ * foo nested in B nested in A.
+ *
+ * It does this by starting off with the tree ['A', '.B'] (the nodes that
+ * have to be created for `foo` to be inserted).
+ *
+ * If A's node doesn't exist, we create it. Then we assign `doclet` to
+ * path 'B.foo' in 'A.children' (hence the recursion).
+ *
+ * @param {TAFFY} taffy database with all the doclets (we search through these to
+ * find the intermediate node doclets).
+ * @param {Doclet} doclet - the doclet we wish to add
+ * @param {node[]} tree - the current tree/subtree to put `doclet` in. This is
+ * an array of nodes, where each node has members 'doclet' and 'children'.
+ * 'doclet' holds the doclet for that node. 'children' is an array of the
+ * same structure as `tree` (i.e. an array of nodes).
+ * @param {string[]} memberof - array of parent nodes we have to resolve,
+ * e.g. ['A', '.B']. We check if the node first element in this array is created
+ * (and then shift() it off and recurse). The reason we need the punctuation
+ * is in the case of there being (e.g.) 'A.B' as well as 'A~B' - we have to know
+ * which one to add to.
+ * @param {string} currentPath - longname of the node we're currently checking/making,
+ * so 'A' then 'A.B' then 'A.B.foo' in the example above.
+ */
+function _assign(data, tree, doclet, memberof, currentPath) {
+    if (!memberof.length) {
+        // add the node if it hasn't been added already (e.g. it was an intermediate
+        // node of a previously-added doclet).
+        if (!tree.filter(function (node) {
+            return node.doclet.longname === doclet.longname;
+        }).length) {
+            tree.push({doclet: doclet});
+        }
+    } else {
+        currentPath += memberof.shift();
+        var assignTo = tree.filter(function (node) {
+            return node.doclet.longname === currentPath;
+        })[0];
+        if (!assignTo) {
+            // intermediate node which doesn't exist, create it.
+            assignTo = {
+                doclet: find(data, {longname: currentPath})[0]
+            };
+            tree.push(assignTo);
+        }
+        if (!assignTo.children) {
+            assignTo.children = [];
+        }
+        // recurse one step down the tree.
+        _assign(data, assignTo.children, doclet, memberof, currentPath);
+    }
+}
+
+/**
+ * Sorts data into a hierarchy of doclets.
+ * @param {TAFFY} data - the TaffyDB database to organise.
+ * @param {Object} filter - if specified, the terminal nodes must all satisfy
+ * this filter (so the returned tree contains just doclets matching this filter
+ * and their parents).
+ * @returns {node[]} a nested array of nodes, where each node is an object of the form:
+ *                       { doclet: Doclet, children: node[] }
+ *                   The 'children' member holds all nodes of doclets that are
+ *                   members of thd 'doclet' member.
+ */
+exports.buildHierarchy = function (data, filter) {
+    var tree = [];
+    data(filter).each(function (d) {
+        var bits = name.shorten(d.longname).memberof.split(/(?=[#.~])/).filter(
+            function (n) { return n; });
+        _assign(data, tree, d, bits, '');
+    });
+    return tree;
 };
 
 /**

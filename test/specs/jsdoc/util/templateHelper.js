@@ -61,6 +61,11 @@ describe("jsdoc/util/templateHelper", function() {
         expect(typeof helper.getMembers).toEqual("function");
     });
 
+    it("should export a 'buildHierarchy' function", function() {
+        expect(helper.buildHierarchy).toBeDefined();
+        expect(typeof helper.buildHierarchy).toEqual("function");
+    });
+
     it("should export a 'getAttribs' function", function() {
         expect(helper.getAttribs).toBeDefined();
         expect(typeof helper.getAttribs).toEqual("function");
@@ -204,6 +209,80 @@ describe("jsdoc/util/templateHelper", function() {
 
     xdescribe("getMembers", function() {
         // TODO
+    });
+
+    describe("buildHierarchy", function() {
+        var docSet = jasmine.getDocSetFromFile('test/fixtures/templateHelper.js'),
+            data = require('taffydb').taffy(docSet.doclets);
+
+        var hier = helper.buildHierarchy(data);
+        function getChild(children, longname) {
+            var child = children.filter(function (node) {
+                return node.doclet.longname === longname;
+            });
+            expect(child.length).toEqual(1);
+            return child[0];
+        }
+
+        var MyClass, Module, MyNamespace;
+        it("test with no filter: globals", function() {
+            // 1. check globals.
+            expect(hier.length).toEqual(3); // module, 2 globals    
+
+            getChild(hier, 'GLOBAL_VAR');
+            MyClass = getChild(hier, 'MyClass');
+            Module = getChild(hier, 'module:terrain');
+        });
+
+        it("test with no filter: global MyClass", function() {
+            // 2. check the global MyClass
+            expect(MyClass.children.length).toEqual(2);
+            getChild(MyClass.children, 'MyClass#x');
+            getChild(MyClass.children, 'MyClass~x');
+        });
+
+        it("test with no filter: module:terrain", function() {
+            // 3. check the module.
+            expect(Module.children.length).toEqual(2); // nested MyClass, MyNamespace
+            getChild(Module.children, 'module:terrain~MyClass');
+            MyNamespace = getChild(Module.children, 'module:terrain~MyNamespace');
+        });
+
+        it("test with no filter: module:terrain~MyNamespace", function() {
+            // 4. check module:terrain~MyNamespace
+            expect(MyNamespace.children.length).toEqual(3); // x, MyClass, MyNamespace
+            getChild(MyNamespace.children, 'module:terrain~MyNamespace.x');
+            MyClass = getChild(MyNamespace.children, 'module:terrain~MyNamespace.MyClass');
+            MyNamespace = getChild(MyNamespace.children, 'module:terrain~MyNamespace.MyNamespace');
+        });
+
+        it("test with no filter: module:terrain~MyNamespace.MyClass#y", function() {
+            // 5. check module:terrain~MyNamespace.MyClass#y
+            expect(MyClass.children.length).toEqual(1);
+            getChild(MyClass.children, 'module:terrain~MyNamespace.MyClass#y');
+        });
+
+        it("test with no filter: module:terrain~MyNamespace.event:MyEvent", function() {
+            // 6. check module:terrain~MyNamespace.MyNamespace.MyEvent
+            expect(MyNamespace.children.length).toEqual(1);
+            getChild(MyNamespace.children, 'module:terrain~MyNamespace.MyNamespace.event:MyEvent');
+        });
+
+        it("test with a filter", function() {
+            hier = helper.buildHierarchy(data, {kind: 'class'});
+            // on the top-level, only MyClass and module:terrain have classes in them or are classes.
+            expect(hier.length).toEqual(2);
+            // MyClass
+            expect(getChild(hier, 'MyClass').children).toBeUndefined();
+            Module = getChild(hier, 'module:terrain');
+            // module:terrain~MyClass
+            MyClass = getChild(Module.children, 'module:terrain~MyClass');
+            expect(MyClass.children).toBeUndefined();
+            // module:terrain~MyNamespace.MyClass
+            MyNamespace = getChild(Module.children, 'module:terrain~MyNamespace');
+            MyClass = getChild(MyNamespace.children, 'module:terrain~MyNamespace.MyClass');
+            expect(MyClass.children).toBeUndefined();
+        });
     });
 
     xdescribe("getAttribs", function() {
