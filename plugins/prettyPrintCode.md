@@ -29,18 +29,14 @@ console.log("Hello world!");
 ```
 Alternatively, one can use the fencing syntax (*if* github-flavoured markdown is specified as the parser):
 
-```none
-&#x60;&#x60;&#x60;python
-print "Hello world!"
-&#x60;&#x60;&#x60;
-```
+    ```python
+    print "Hello world!"
+    ```
 or:
 
-```none
-&#x60;&#x60;&#x60;
-console.log("Hello world!");
-&#x60;&#x60;&#x60;
-```
+    ```
+    console.log("Hello world!");
+    ```
 
 which gives:
 
@@ -59,11 +55,9 @@ In this way one can force the language for syntax highlighting (although by defa
 To force plain printing instead of pretty-printing, use the fencing syntax
 with language 'none':
 
-```none
-&#x60;&#x60;&#x60;none
-This will not be pretty-printed
-&#x60;&#x60;&#x60;
-```
+    ```none
+    This will not be pretty-printed
+    ```
 
 which yields:
 
@@ -113,4 +107,4 @@ The following:
 
 is rendered as:
 
-![prettyPrintCode example](https://github.com/mathematicalcoffee/jsdoc/blob/myPlugins/plugins/prettyPrintCode_example.png)  
+![prettyPrintCode example](https://raw.github.com/mathematicalcoffee/jsdoc/plugin-prettyprint-code/plugins/prettyPrintCode_example.png)  
