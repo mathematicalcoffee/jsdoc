@@ -1,30 +1,95 @@
 # prettyPrintCode plugin
+
+**Status**: stable.
+**Location**: [myPlugins branch on my jsdoc3 fork](https://github.com/mathematicalcoffee/jsdoc/blob/myPlugins/plugins/prettyPrintCode.js)  
+**Author**: mathematical.coffee <mathematical.coffee@gmail.com>
+
 This plugin automatically pretty prints anything in `<pre><code>` tags,
 including markdown code blocks.
-
-Prettify automatically guesses the language to print in; if you wish to override
-this you may specify it using the following markdown syntax:
-
-    ```{language name}
-    {code}
-    ```
+**If you are using the markdown plugin, this should appear *after* it in `conf.json`.
 
 Note that by default `@example` blocks are already pretty printed without the
 use of this plugin; the main use for this plugin is for prettifying code bocks
 written in the markdown syntax.
 
-**Status**: in development.
-**Location**: [myPlugins branch on my jsdoc3 fork](https://github.com/mathematicalcoffee/jsdoc/blob/myPlugins/plugins/prettyPrintCode.js)  
-**Author**: mathematical.coffee <mathematical.coffee@gmail.com>
+## Syntax
+Any code block produced by markdown will be pretty-printed.
 
-## Usage
-No particular usage needed; anything surrounded in `<pre><code>` tags will be
-pretty-printed.
+For example, the following is written with the indenting method of markdown
+and will be rendered pretty printed rather than plain:
 
-## Example
+```none
+    console.log("Hello world!");
+```
 
-First example: documentation in a class doclet or a doclet of something that
-is a member of that class will resolve relative links to that class.
+which gives:
+
+```javascript
+console.log("Hello world!");
+```
+Alternatively, one can use the fencing syntax (*if* github-flavoured markdown is specified as the parser):
+
+```none
+&#x60;&#x60;&#x60;python
+print "Hello world!"
+&#x60;&#x60;&#x60;
+```
+or:
+
+```none
+&#x60;&#x60;&#x60;
+console.log("Hello world!");
+&#x60;&#x60;&#x60;
+```
+
+which gives:
+
+```python
+print "Hello world!"
+```
+
+and
+
+```
+console.log("Hello world!");
+```
+
+In this way one can force the language for syntax highlighting (although by default, prettyprint will detect the language for you).
+
+To force plain printing instead of pretty-printing, use the fencing syntax
+with language 'none':
+
+```none
+&#x60;&#x60;&#x60;none
+This will not be pretty-printed
+&#x60;&#x60;&#x60;
+```
+
+which yields:
+
+```none
+This will not be pretty-printed
+```
+
+## Using the plugin
+
+Ensure the markdown and prettyPrintCode plugins are enabled in `conf.json`:
+
+    "plugins": [
+        "plugins/markdown",
+        "plugins/prettyPrintCode"
+    ]
+
+If you wish to use the code-fencing syntax (three backticks start and end a code block),
+also enable github-flavoured markdown:
+
+    "markdown": {
+        "parser": "gfm"
+    }
+
+
+## Examples
+The following:
 
     /** A function.
      *
@@ -45,3 +110,7 @@ is a member of that class will resolve relative links to that class.
      */
     function Hello() {
     }
+
+is rendered as:
+
+![prettyPrintCode example](https://github.com/mathematicalcoffee/jsdoc/blob/myPlugins/plugins/prettyPrintCode_example.png)  
