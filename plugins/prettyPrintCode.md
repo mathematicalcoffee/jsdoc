@@ -46,7 +46,7 @@ print "Hello world!"
 
 and
 
-```
+```javascript
 console.log("Hello world!");
 ```
 
