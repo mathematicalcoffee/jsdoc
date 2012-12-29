@@ -24,6 +24,7 @@ Summary of plugins
 * [relativeLink](#relativelink) - provides relative links `{@link #foo}`.
 * [inheritDoc](#inheritdoc) - borrow parameter/returns and other documentation from other doclets into this one.
 * [pragmaTag](#pragmatag) - add tags to all doclets between `@+` and `@-`.
+* [prettyPrintCode](#prettyPrintCode) - automatically pretty-print markdown code snippets.
 
 ## autoNamespace
 Allows the user to have an automatic namespace assigned to each file.
@@ -60,6 +61,12 @@ will cause `@const` to be added to each subsequent doclet until a `/** @- */`
 is found.
 
 See [pragmaTag.md](../../../blob/myPlugins/plugins/pragmaTag.md).
+
+## prettyPrintCode
+This automatically pretty-prints any code blocks as specified using Markdown syntax.
+Both the indented code block and fenced code block (surrounded by three backticks) will be pretty-printed.
+
+See [prettyPrintCode.md](../../../blob/myPlugins/plugins/prettyPrintCode.md).
 
 ## registerLink
 Use tag '@registerLink symbol URL' so that whenever `symbol` is used
