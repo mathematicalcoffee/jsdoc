@@ -13,17 +13,17 @@
  */
 exports.publish = function(outputDirectory, outputFileName, sourceCode) {
     
-    var fs                     = require('fs');
+    var fs                     = require('jsdoc/fs');
     var path                   = require('path');
     var helper                 = require('jsdoc/util/templateHelper');
     var template               = require('jsdoc/template');
     
     outputDirectory            = path.resolve(outputDirectory);
     
-    var staticFilesDirectory   = path.resolve(env.dirname + '/templates/prettyPrintSource/static');
+    var staticFilesDirectory   = path.resolve(__dirname + '/templates/prettyPrintSource/static');
     var outputFile             = path.join(outputDirectory, outputFileName + '.html');
     var templateName           = 'layout.tmpl';
-    var templatePath           = path.resolve(env.dirname + '/templates/prettyPrintSource');
+    var templatePath           = path.resolve(__dirname + '/templates/prettyPrintSource');
     var temmplateFilesDirectory= path.join(templatePath, '/tmpl');
     var templateData           = {};
     
@@ -40,7 +40,7 @@ exports.publish = function(outputDirectory, outputFileName, sourceCode) {
     console.log('outputContent   : ' + outputContent);
     */
     fs.mkPath(outputDirectory);
-    fs.writeFileSync(outputFile, outputContent);
+    fs.writeFileSync(outputFile, outputContent, 'utf8');
     
     // copy static files to outdir
     var fromDir                = path.join(templatePath, '/static');
