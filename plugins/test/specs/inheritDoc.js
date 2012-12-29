@@ -2,11 +2,9 @@ describe("inheritDoc plugin", function() {
     var parser = new (require("jsdoc/src/parser")).Parser(),
         plugin = require('plugins/inheritDoc');
 
-    installPlugins(['plugins/inheritDoc'], parser);
+    require('jsdoc/plugins').installPlugins(['plugins/inheritDoc'], parser);
 
     var docSet = jasmine.getDocSetFromFile('plugins/test/fixtures/inheritDoc.js', parser),
-//    var path = require('path'),
-//    var docSet = parser.parse([path.join(env.dirname, "plugins/test/fixtures/railsTemplate.js.erb")]);
         myFunction = docSet.getByLongname('myFunction')[0],
         myFunction2 = docSet.getByLongname('myFunction2')[0],
         myFunction3 = docSet.getByLongname('myFunction3')[0],
