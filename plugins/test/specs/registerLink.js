@@ -6,7 +6,7 @@ describe("registerLink plugin", function () {
     var path = require('path');
     var helper = require('jsdoc/util/templateHelper');
 
-    installPlugins(['plugins/registerLink'], parser);
+    require('jsdoc/plugins').installPlugins(['plugins/registerLink'], parser);
     require('jsdoc/src/handlers').attachTo(parser);
 
     // add some configuration for tests

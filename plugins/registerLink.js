@@ -102,7 +102,7 @@ exports.handlers = {
                 var fullPath = (files[i].charAt(0) === '/' ?
                                     files[i] :
                                     path.join(confPath, files[i]));
-                declarations += '\n' + fs.readFileSync(fullPath);
+                declarations += '\n' + fs.readFileSync(fullPath, 'utf8');
             }
 
             e.source = '/**\n' + declarations + '\n*/\n' + e.source;
