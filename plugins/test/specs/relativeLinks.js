@@ -2,7 +2,7 @@ describe("relativeLinks plugin", function() {
     var parser = new (require("jsdoc/src/parser")).Parser(),
         plugin = require('plugins/relativeLinks');
 
-    installPlugins(['plugins/relativeLinks'], parser);
+    require('jsdoc/plugins').installPlugins(['plugins/relativeLinks'], parser);
 
     var docSet = jasmine.getDocSetFromFile('plugins/test/fixtures/relativeLinks.js', parser),
         docSet2 = jasmine.getDocSetFromFile('plugins/relativeLinks.js', parser),
