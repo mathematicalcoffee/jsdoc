@@ -1,25 +1,25 @@
 /*global env: true, expect: true, runs: true, waits: true */
 /*jshint evil: true */
-var fs = require('fs');
+var fs = require('jsdoc/fs');
 var path = require('path');
 var util = require('util');
 
-var jasmineAll = require('test/lib/jasmine');
-var jasmine = jasmineAll.jasmine;
+var hasOwnProp = Object.prototype.hasOwnProperty;
+
+var myGlobal = require('jsdoc/util/global');
+
+var jasmineAll = myGlobal.jasmineAll = require('test/lib/jasmine');
+var jasmine = myGlobal.jasmine = jasmineAll.jasmine;
 
 // due to scoping issues, requiring this file doesn't work
-eval( fs.readFileSync(env.dirname + '/test/async-callback.js') );
+eval( fs.readFileSync(__dirname + '/test/async-callback.js', 'utf8') );
 
 var jasmineNode = require('test/reporter').jasmineNode;
-
-var globalRoot = (function() {
-    return this;
-}).call(null);
 
 // set up jasmine's global functions
 ['spyOn', 'it', 'xit', 'expect', 'runs', 'waitsFor', 'beforeEach', 'afterEach', 'describe',
     'xdescribe'].forEach(function(item) {
-    globalRoot[item] = jasmineAll[item];
+    myGlobal[item] = jasmineAll[item];
 });
 
 jasmine.loadHelpersInFolder = function(folder, matcher) {
@@ -30,11 +30,11 @@ jasmine.loadHelpersInFolder = function(folder, matcher) {
     for ( var i = 0, len = helpers.length; i < len; ++i) {
         var file = helpers[i].path();
         var helper = require(file.replace(/\\/g, '/').
-            replace(new RegExp('^' + env.dirname + '/'), "").
+            replace(new RegExp('^' + __dirname + '/'), "").
             replace(/\.*$/, ""));
 
         for (var key in helper) {
-            if ( helper.hasOwnProperty(key) ) {
+            if ( hasOwnProp.call(helper, key) ) {
                 this[key] = helper[key];
             }
         }
@@ -45,7 +45,7 @@ var reporter = null;
 jasmine.initialize = function(done, verbose) {
     var jasmineEnv = jasmine.getEnv();
 
-   if (reporter !== null) {
+    if (reporter !== null) {
         // If we've run before, we need to reset the runner
         jasmineEnv.currentRunner_ = new jasmine.Runner(jasmineEnv);
         // And clear the reporter
@@ -94,7 +94,7 @@ jasmine.executeSpecsInFolder = function(folder, done, opts) {
     for (var i = 0, len = specsList.length; i < len; ++i) {
         filename = specsList[i];
         require(filename.path().replace(/\\/g, '/').
-            replace(new RegExp('^' + env.dirname + '/'), "").
+            replace(new RegExp('^' + __dirname + '/'), "").
             replace(/\.\w+$/, ""));
     }
 
@@ -128,8 +128,34 @@ jasmine.asyncSpecDone = function() {
     jasmine.asyncSpecWait.done = true;
 };
 
+jasmine.getDocSetFromFile = function(filename, parser) {
+    var sourceCode = fs.readFileSync(__dirname + '/' + filename, 'utf8'),
+        testParser = parser || new (require('jsdoc/src/parser')).Parser(),
+        indexAll = require('jsdoc/borrow').indexAll,
+        doclets;
+
+    require('jsdoc/src/handlers').attachTo(testParser);
+
+    doclets = testParser.parse('javascript:' + sourceCode);
+    indexAll(doclets);
+
+    require('jsdoc/augment').addInherited(doclets);
+
+    // test assume borrows have not yet been resolved
+    // require('jsdoc/borrow').resolveBorrows(doclets);
+
+    return {
+        doclets: doclets,
+        getByLongname: function(longname) {
+            return doclets.filter(function(doclet) {
+                return (doclet.longname || doclet.name) === longname;
+            });
+        }
+    };
+};
+
 for (var key in jasmine) {
-    if ( jasmine.hasOwnProperty(key) ) {
+    if ( hasOwnProp.call(jasmine, key) ) {
         exports[key] = jasmine[key];
     }
 }
