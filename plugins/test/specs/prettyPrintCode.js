@@ -5,8 +5,8 @@ describe("prettyPrintCode plugin", function() {
     var old = env.conf.markdown ? env.conf.markdown.parser : undefined;
     env.conf.markdown = {parser: 'gfm'};
 
-    installPlugins(['plugins/markdown'], parser);
-    installPlugins(['plugins/prettyPrintCode'], parser);
+    require('jsdoc/plugins').installPlugins(['plugins/markdown'], parser);
+    require('jsdoc/plugins').installPlugins(['plugins/prettyPrintCode'], parser);
 
     var docSet = jasmine.getDocSetFromFile('plugins/prettyPrintCode.js', parser);
     var doc;
