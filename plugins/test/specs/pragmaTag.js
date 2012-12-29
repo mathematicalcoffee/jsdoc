@@ -2,7 +2,7 @@ describe("pragmaTag plugin", function() {
     var parser = new (require("jsdoc/src/parser")).Parser(),
         plugin = require('plugins/pragmaTag');
 
-    installPlugins(['plugins/pragmaTag'], parser);
+    require('jsdoc/plugins').installPlugins(['plugins/pragmaTag'], parser);
 
     var docSet = jasmine.getDocSetFromFile('plugins/test/fixtures/pragmaTag.js', parser),
         A = docSet.getByLongname('A')[0],
