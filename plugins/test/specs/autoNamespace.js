@@ -4,7 +4,7 @@
 describe("autoNamespace plugin", function () {
     var parser = new (require("jsdoc/src/parser")).Parser(),
         plugin = require('plugins/autoNamespace');
-    installPlugins(['plugins/autoNamespace'], parser);
+    require('jsdoc/plugins').installPlugins(['plugins/autoNamespace'], parser);
     require('jsdoc/src/handlers').attachTo(parser);
 
     // note: we use parser.parse instead of jasmine.getDocSetFromFile because
@@ -28,7 +28,7 @@ describe("autoNamespace plugin", function () {
 
     filePath = path.join(env.dirname, 'plugins/autoNamespace.js');
     var docSet = parser.parse([filePath]),
-        autoNamespaceFile = getByLongname(docSet, filePath)[0],
+        autoNamespaceFile = getByLongname(docSet, 'plugins/autoNamespace.js')[0],
         AutoNamespace = getByLongname(docSet, 'AutoNamespace')[0],
         convertEntireText = getByLongname(docSet, 'AutoNamespace.convertEntireText')[0],
         convertLinkTags = getByLongname(docSet, 'AutoNamespace.convertLinkTags')[0],
@@ -36,7 +36,7 @@ describe("autoNamespace plugin", function () {
 
     filePath = path.join(env.dirname, 'plugins/test/fixtures/autoNamespace.js');
     var docSet2 = parser.parse([filePath]),
-        autoNamespaceFixtureFile = getByLongname(docSet2, filePath)[0],
+        autoNamespaceFixtureFile = getByLongname(docSet2, 'fixtures/autoNamespace.js')[0],
         MyClass = getByLongname(docSet2, 'MyNamespace.MyClass')[0],
         MySubclass = getByLongname(docSet2, 'MyNamespace.MySubclass')[0],
         MyObject = getByLongname(docSet2, 'MyNamespace.MyObject')[0],
