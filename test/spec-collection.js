@@ -1,7 +1,7 @@
 /*global env: true */
 var wrench = require('wrench');
 var path = require('path');
-var fs = require('fs');
+var fs = require('jsdoc/fs');
 var specs = [];
 
 var createSpecObj = function(_path, root) {
@@ -37,7 +37,7 @@ exports.load = function(loadpath, matcher, clear) {
 
     var wannaBeSpecs = wrench.readdirSyncRecursive(loadpath);
     for (var i = 0; i < wannaBeSpecs.length; i++) {
-        var file = path.join(env.dirname, loadpath, wannaBeSpecs[i]);
+        var file = path.join(__dirname, loadpath, wannaBeSpecs[i]);
         try {
             if (fs.statSync(file).isFile()) {
                 if (matcher.test(path.basename(file))) {

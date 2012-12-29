@@ -1,6 +1,6 @@
 /*global env: true */
 var template = require('jsdoc/template'),
-    fs = require('fs'),
+    fs = require('jsdoc/fs'),
     path = require('path'),
     taffy = require('taffydb').taffy,
     helper = require('jsdoc/util/templateHelper'),
@@ -69,7 +69,7 @@ function generate(title, docs, filename) {
     
     html = helper.resolveLinks(html); // turn {@link foo} into <a href="foodoc.html">foo</a>
     
-    fs.writeFileSync(outpath, html);
+    fs.writeFileSync(outpath, html, 'utf8');
 }
 
 /**
@@ -82,6 +82,7 @@ function generate(title, docs, filename) {
  * @param {array<object>} members.modules
  * @param {array<object>} members.namespaces
  * @param {array<object>} members.tutorials
+ * @param {array<object>} members.events
  * @return {string} The HTML for the navigation sidebar.
  */
 function buildNav(members) {
@@ -129,6 +130,18 @@ function buildNav(members) {
                 nav += '<li>'+linkto(c.longname, c.name)+'</li>';
             }
             seen[c.longname] = true;
+        });
+        
+        nav += '</ul>';
+    }
+
+    if (members.events.length) {
+        nav += '<h3>Events</h3><ul>';
+        members.events.forEach(function(e) {
+            if ( !hasOwnProp.call(seen, e.longname) ) {
+                nav += '<li>'+linkto(e.longname, e.name)+'</li>';
+            }
+            seen[e.longname] = true;
         });
         
         nav += '</ul>';
@@ -303,7 +316,7 @@ exports.publish = function(taffyData, opts, tutorials) {
     // once for all
     view.nav = buildNav(members);
 
-    if (members.globals.length) { generate('Global', members.globals, globalUrl); }
+    if (members.globals.length) { generate('Global', [{kind: 'globalobj'}], globalUrl); }
     
     // index page displays information from package.json and lists files
     var files = find({kind: 'file'}),
@@ -366,7 +379,7 @@ exports.publish = function(taffyData, opts, tutorials) {
         // yes, you can use {@link} in tutorials too!
         html = helper.resolveLinks(html); // turn {@link foo} into <a href="foodoc.html">foo</a>
         
-        fs.writeFileSync(tutorialPath, html);
+        fs.writeFileSync(tutorialPath, html, 'utf8');
     }
     
     // tutorials can have only one parent so there is no risk for loops
