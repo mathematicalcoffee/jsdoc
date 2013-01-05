@@ -1,6 +1,6 @@
 JSDoc 3
 =======
-[![Build Status](https://secure.travis-ci.org/jsdoc3/jsdoc.png)](http://travis-ci.org/jsdoc3/jsdoc)
+[![Build Status](https://secure.travis-ci.org/jsdoc3/jsdoc.png?branch=master)](http://travis-ci.org/jsdoc3/jsdoc)
 
 An inline API documentation processor for JavaScript. JSDoc 3 is intended to be
 an upgrade to JsDoc Toolkit (JSDoc 2).
@@ -11,21 +11,29 @@ Want to contribute to JSDoc? Please read `CONTRIBUTING.md`.
 Installation
 ------------
 
-Download a copy of JSDoc 3 from the official GitHub repository:
-https://github.com/jsdoc3/jsdoc
+Use git to clone the [official JSDoc repository](https://github.com/jsdoc3/jsdoc):
 
-Or if you have Node.js installed, use npm:
+    git clone git@github.com:jsdoc3/jsdoc.git
 
-    npm install -g git://github.com/jsdoc3/jsdoc.git
+Alternatively, you can download a .zip file for the
+[latest development version](https://github.com/jsdoc3/jsdoc/archive/master.zip)
+or a [previous release](https://github.com/jsdoc3/jsdoc/tags).
+
+You can also install JSDoc within a Node.js project's `node_modules` directory
+using npm. To install the latest development version, change directories to your
+Node.js project, then run the following command:
+
+    npm install git://github.com/jsdoc3/jsdoc.git
 
 **Note**: Although you can install JSDoc with npm, JSDoc does not currently run
-on Node.js.
+on Node.js. In addition, installing JSDoc globally with `npm install -g` is not
+currently supported.
 
 
 Usage
 -----
 
-This example assumes that your working directory is the jsdoc application base
+This example assumes that your working directory is the JSDoc application base
 directory:
 
     ./jsdoc yourSourceCodeFile.js
@@ -75,7 +83,7 @@ Or on OS X, Linux, and other POSIX-compliant systems:
 If you can't get the short-form commands to work, try invoking Java directly:
 
     java -cp lib/js.jar org.mozilla.javascript.tools.debugger.Main \
-    -debug -modules node_modules -modules rhino_modules -modules . \
+    -debug -modules node_modules -modules rhino -modules lib -modules . \
     jsdoc.js your/script.js
 
 Note: `--debug` must be the first argument to the short-form command.
