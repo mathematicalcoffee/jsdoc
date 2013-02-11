@@ -274,9 +274,8 @@ describe("jsdoc/doclet", function() {
                 doclet.setMemberof('<global>');
                 expect(doclet.memberof).toBe('');
 
-                // BUG: sid.replace(/^<global>.?/, '') --> need to escape the dot.
-                //doclet.setMemberof('<global>foobar#asdf');
-                //expect(doclet.memberof).toBe('foobar#asdf');
+                doclet.setMemberof('<global>foobar#asdf');
+                expect(doclet.memberof).toBe('foobar#asdf');
 
                 doclet.setMemberof('<global>.baz#asdf');
                 expect(doclet.memberof).toBe('baz#asdf');
