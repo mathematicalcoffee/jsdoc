@@ -20,8 +20,8 @@ describe("jsdoc/doclet", function() {
     describe('Doclet', function() {
         // we don't need to test the functioning of individual tags here; that is
         // done in jsdoc/test/tags.
-        var eventDoclet = new jsdoc.doclet.Doclet('/** @event foobar  */', {}),
-            doclet = new jsdoc.doclet.Doclet('/** @const {number} FOO\n * @default 1 */', {}),
+        var proto = jsdoc.doclet.Doclet.prototype,
+            eventDoclet = new jsdoc.doclet.Doclet('/** @event foobar  */', {}),
             meta = {
                 range: [0, 100],
                 id: 'ljkaskldf',
@@ -35,135 +35,126 @@ describe("jsdoc/doclet", function() {
                     value: 1,
                     paramnames: ['asdf', 'bar']
                 }
-            };
+            },
+            doclet = new jsdoc.doclet.Doclet('/** @const {number} FOO\n * @default 1 */', meta);
 
         it('should have a postProcess function', function() {
-            expect(doclet.postProcess).toBeDefined();
-            expect(typeof doclet.postProcess).toBe('function');
+            expect(proto.postProcess).toBeDefined();
+            expect(typeof proto.postProcess).toBe('function');
         });
 
         it('should have a addTag function', function() {
-            expect(doclet.addTag).toBeDefined();
-            expect(typeof doclet.addTag).toBe('function');
+            expect(proto.addTag).toBeDefined();
+            expect(typeof proto.addTag).toBe('function');
         });
 
         it('should have a setMemberof function', function() {
-            expect(doclet.setMemberof).toBeDefined();
-            expect(typeof doclet.setMemberof).toBe('function');
+            expect(proto.setMemberof).toBeDefined();
+            expect(typeof proto.setMemberof).toBe('function');
         });
 
         it('should have a setLongname function', function() {
-            expect(doclet.setLongname).toBeDefined();
-            expect(typeof doclet.setLongname).toBe('function');
+            expect(proto.setLongname).toBeDefined();
+            expect(typeof proto.setLongname).toBe('function');
         });
 
         it('should have a borrow function', function() {
-            expect(doclet.borrow).toBeDefined();
-            expect(typeof doclet.borrow).toBe('function');
+            expect(proto.borrow).toBeDefined();
+            expect(typeof proto.borrow).toBe('function');
         });
 
         it('should have a mix function', function() {
-            expect(doclet.mix).toBeDefined();
-            expect(typeof doclet.mix).toBe('function');
+            expect(proto.mix).toBeDefined();
+            expect(typeof proto.mix).toBe('function');
         });
 
         it('should have a augment function', function() {
-            expect(doclet.augment).toBeDefined();
-            expect(typeof doclet.augment).toBe('function');
+            expect(proto.augment).toBeDefined();
+            expect(typeof proto.augment).toBe('function');
         });
 
         it('should have a setMeta function', function() {
-            expect(doclet.setMeta).toBeDefined();
-            expect(typeof doclet.setMeta).toBe('function');
-        });
-
-        it("should have a string 'comment' property", function() {
-            expect(doclet.comment).toBeDefined();
-            expect(typeof doclet.comment).toBe('string');
+            expect(proto.setMeta).toBeDefined();
+            expect(typeof proto.setMeta).toBe('function');
         });
 
         describe('constructor', function() {
-            var lazy = jsdoc.doclet.Doclet.prototype;
-            var src = '/**blah blah blah\n * @name fdsa\n * @type {number}\n * @readonly */',
-                meta2 = {id: 'fdsa'};
-
+            var src = '/**blah blah blah\n * @name fdsa\n * @type {number}\n * @readonly */';
             it('should set this.comment to the source parameter', function() {
-                var cleanDoclet = new jsdoc.doclet.Doclet(src, meta2);
-                expect(cleanDoclet.comment).toBe(src);
+                expect(doclet.comment).toBeDefined();
+                expect(typeof doclet.comment).toBe('string');
+                expect(doclet.comment).toBe('/** @const {number} FOO\n * @default 1 */');
             });
 
             it('should call this.setMeta to the meta parameter', function() {
                 // why do I have to re-spy in each call?
-                spyOn(lazy, 'setMeta').andCallThrough();
-                new jsdoc.doclet.Doclet(src, meta2);
-                expect(lazy.setMeta).toHaveBeenCalled();
-                expect(lazy.setMeta.mostRecentCall.args[0]).toBe(meta2);
+                spyOn(proto, 'setMeta').andCallThrough();
+                new jsdoc.doclet.Doclet(src, meta);
+                expect(proto.setMeta).toHaveBeenCalled();
+                expect(proto.setMeta.mostRecentCall.args[0]).toBe(meta);
             });
 
             it('should call this.addTag on all tags found', function() {
-                spyOn(lazy, 'addTag').andCallThrough();
-                new jsdoc.doclet.Doclet(src, meta2);
+                spyOn(proto, 'addTag').andCallThrough();
+                new jsdoc.doclet.Doclet(src, {});
 
-                expect(lazy.addTag).toHaveBeenCalled();
+                expect(proto.addTag).toHaveBeenCalled();
 
                 // it adds @description for you
-                expect(lazy.addTag.calls[0].args[0]).toBe('description');
-                expect(lazy.addTag.calls[0].args[1]).toBe(' blah blah blah\n');
+                expect(proto.addTag.calls[0].args[0]).toBe('description');
+                expect(proto.addTag.calls[0].args[1]).toBe(' blah blah blah\n');
 
-                expect(lazy.addTag.calls[1].args[0]).toBe('name');
-                expect(lazy.addTag.calls[1].args[1]).toBe(' fdsa\n');
+                expect(proto.addTag.calls[1].args[0]).toBe('name');
+                expect(proto.addTag.calls[1].args[1]).toBe(' fdsa\n');
 
-                expect(lazy.addTag.calls[2].args[0]).toBe('type');
-                expect(lazy.addTag.calls[2].args[1]).toBe(' {number}\n');
+                expect(proto.addTag.calls[2].args[0]).toBe('type');
+                expect(proto.addTag.calls[2].args[1]).toBe(' {number}\n');
 
-                expect(lazy.addTag.calls[3].args[0]).toBe('readonly');
-                expect(lazy.addTag.calls[3].args[1]).toBeUndefined();
+                expect(proto.addTag.calls[3].args[0]).toBe('readonly');
+                expect(proto.addTag.calls[3].args[1]).toBeUndefined();
             });
 
             it('should call postProcess', function() {
-                spyOn(lazy, 'postProcess').andCallThrough();
-                var doc = new jsdoc.doclet.Doclet(src, meta2);
+                spyOn(proto, 'postProcess').andCallThrough();
+                var doc = new jsdoc.doclet.Doclet(src, {});
 
-                expect(lazy.postProcess).toHaveBeenCalled();
-                expect(lazy.postProcess.mostRecentCall.object).toBe(doc);
+                expect(proto.postProcess).toHaveBeenCalled();
+                expect(proto.postProcess.mostRecentCall.object).toBe(doc);
             });
         });
 
         describe('postProcess', function() {
-            var cleanDoclet,
-                lazy = jsdoc.doclet.Doclet.prototype,
-                pp = lazy.postProcess;
+            var pp = proto.postProcess;
 
             beforeEach(function () {
                 // ensure it isn't called so that we can call it and examine the results
-                lazy.postProcess = function () {};
+                proto.postProcess = function () {};
                 // regenerate the doclet each time.
-                cleanDoclet = new jsdoc.doclet.Doclet('/** @constant FOOBAR */', {
+                doclet = new jsdoc.doclet.Doclet('/** @const {number} FOO\n * @default 1 */', {
                     code: {
                         type: 'function',
-                        paramnames: ['foo']
-                    }
-                });
+                       paramnames: ['foo']
+                    }});
             });
 
             afterEach(function () {
-                lazy.postProcess = pp;
+                proto.postProcess = pp;
             });
 
-            xit('should call jsdoc.name.resolve if this.preserveName is false', function() {
+            it('should call jsdoc.name.resolve if this.preserveName is false', function() {
                 spyOn(jsdoc.name, 'resolve').andCallThrough();
-                cleanDoclet.preserveName = false;
-                pp.call(cleanDoclet);
+                doclet.preserveName = false;
+                pp.call(doclet);
 
                 expect(jsdoc.name.resolve).toHaveBeenCalled();
-                expect(jsdoc.name.resolve.mostRecentCall.args[0]).toBe(cleanDoclet);
+                expect(jsdoc.name.resolve.mostRecentCall.args[0]).toBe(doclet);
                 // no need to test jsdoc.name.resolve itself, that is done in name.js testing.
             });
 
             it('should not call jsdoc.name.resolve if this.preserveName is true', function() {
                 spyOn(jsdoc.name, 'resolve').andCallThrough();
-                cleanDoclet.preserveName = true;
-                pp.call(cleanDoclet);
+                doclet.preserveName = true;
+                pp.call(doclet);
 
                 expect(jsdoc.name.resolve).not.toHaveBeenCalled();
             });
@@ -172,54 +163,60 @@ describe("jsdoc/doclet", function() {
                 var tmp = jsdoc.name.resolve;
                 jsdoc.name.resolve = function () {};
 
-                expect(cleanDoclet.longname).toBeFalsy();
+                expect(doclet.longname).toBeFalsy();
 
-                spyOn(lazy, 'setLongname').andCallThrough();
-                pp.call(cleanDoclet);
+                spyOn(proto, 'setLongname').andCallThrough();
+                pp.call(doclet);
 
-                expect(lazy.setLongname).toHaveBeenCalled();
-                expect(lazy.setLongname.mostRecentCall.args[0]).toBe('FOOBAR');
-                expect(cleanDoclet.longname).toEqual('FOOBAR');
+                expect(proto.setLongname).toHaveBeenCalled();
+                expect(proto.setLongname.mostRecentCall.args[0]).toBe('FOO');
+                expect(doclet.longname).toEqual('FOO');
 
                 jsdoc.name.resolve = tmp;
             });
 
             it("should delete this.memberof if it's an empty string", function() {
-                expect(cleanDoclet.memberof).toBeFalsy();
+                expect(doclet.memberof).toBeFalsy();
 
-                pp.call(cleanDoclet);
+                pp.call(doclet);
 
-                expect(cleanDoclet.memberof).not.toBeDefined();
+                expect(doclet.memberof).not.toBeDefined();
             });
 
             it("should set the doclet's kind from its code type if supplied in the metadata and not otherwise specified", function() {
-                delete cleanDoclet.kind;
-                pp.call(cleanDoclet);
-                expect(cleanDoclet.kind).toBe('function');
+                doclet.setMeta({code: {type: 'function'}});
+                delete doclet.kind;
+                pp.call(doclet);
+                expect(doclet.kind).toBe('function');
 
                 // if types is not function it'll be set to member
-                cleanDoclet.setMeta({code: {type: 'aljkdf'}});
-                delete cleanDoclet.kind;
-                pp.call(cleanDoclet);
-                expect(cleanDoclet.kind).toBe('member');
+                doclet.setMeta({code: {type: 'aljkdf'}});
+                delete doclet.kind;
+                pp.call(doclet);
+                expect(doclet.kind).toBe('member');
             });
 
             it("should append the variation to the longname if it has one and is not already there", function() {
-                cleanDoclet.variation = '2';
-                expect(cleanDoclet.longname).toBeFalsy();
-                pp.call(cleanDoclet);
-                expect(cleanDoclet.longname).toEqual('FOOBAR(2)');
+                doclet.variation = '2';
+                expect(doclet.longname).toBeFalsy();
+                pp.call(doclet);
+                expect(doclet.longname).toEqual('FOO(2)');
             });
 
             it("should add in missing params from the code metadata if present", function() {
                 // (only for functions where you use the @param tag)
-                cleanDoclet.params = [ {} ];
-                pp.call(cleanDoclet);
-                expect(cleanDoclet.params[0].name).toEqual('foo');
+                doclet.params = [ {} ];
+                pp.call(doclet);
+                expect(doclet.params[0].name).toEqual('foo');
             });
         });
 
         describe('addTag', function() {
+            // regenerate the doclet each test
+            beforeEach(function () {
+                doclet = new jsdoc.doclet.Doclet('/** @const {number} FOO\n * @default 1 */', meta);
+            });
+
             it("should create a tag and append to this.tags if the tag is unrecognised", function() {
                 var tag = new jsdoc.tag.Tag('nonExistentTag', undefined, doclet.meta);
                 doclet.addTag('nonExistentTag');
@@ -244,17 +241,13 @@ describe("jsdoc/doclet", function() {
             // We can test its results though.
             describe('applyTag', function() {
                 it("should set this.name to the tag's value if the tag is @name", function() {
-                    var oldName = doclet.name;
                     doclet.addTag('name', '<global>.newname#foobar');
                     expect(doclet.name).toBe('<global>.newname#foobar');
-                    doclet.name = oldName;
                 });
 
                 it("should set this.kind to the tag's value if the tag's title is 'kind'", function() {
-                    var oldKind = doclet.kind;
                     doclet.addTag('kind', 'fdsa');
                     expect(doclet.kind).toBe('fdsa');
-                    doclet.kind = oldKind;
                 });
 
                 it("should set this.description to the tag's value if the tag's title is 'description'", function() {
@@ -264,10 +257,8 @@ describe("jsdoc/doclet", function() {
                 });
 
                 it("should set this.scope to the tag's value if the tag's title is 'scope'", function() {
-                    var oldScope = doclet.scope;
                     doclet.addTag('scope', 'inner');
                     expect(doclet.scope).toBe('inner');
-                    doclet.scope = oldScope;
                 });
             });
         });
